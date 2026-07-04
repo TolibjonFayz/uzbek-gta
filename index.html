@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vice City UZ — O'zbekcha haydash o'yini</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1030; font-family: 'Segoe UI', Arial, sans-serif; }
+  canvas.game { display: block; }
+
+  /* ---------- HUD ---------- */
+  #minimap {
+    position: fixed; left: 16px; bottom: 16px;
+    border: 2px solid rgba(255,255,255,0.55);
+    border-radius: 10px;
+    opacity: 0.92;
+    z-index: 5;
+  }
+  #wanted {
+    position: fixed; top: 14px; right: 18px;
+    color: #fff; font-weight: 700; font-size: 19px;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    z-index: 5;
+  }
+  #wanted .hot { color: #ff5252; }
+  #wanted .dim { color: rgba(255,255,255,0.28); }
+  #carinfo {
+    position: fixed; right: 18px; bottom: 16px;
+    text-align: right; color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    z-index: 5;
+  }
+  #speed { font-size: 46px; font-weight: 800; line-height: 1; font-style: italic; }
+  #speedunit { font-size: 12px; opacity: 0.8; letter-spacing: 2px; }
+  #carname { font-size: 17px; font-weight: 600; margin-top: 6px; color: #ffd9ec; }
+  #plate {
+    display: inline-block; margin-top: 4px;
+    background: #f6f6f2; color: #111;
+    font-weight: 700; font-size: 12px;
+    padding: 1px 8px; border-radius: 3px; border: 1px solid #333;
+    min-height: 14px;
+  }
+  #msg {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    background: rgba(12,8,24,0.78); color: #ffe9a8;
+    padding: 10px 22px; border-radius: 10px;
+    font-size: 16px; font-weight: 600;
+    opacity: 0; transition: opacity 0.35s;
+    pointer-events: none; z-index: 6;
+    max-width: 80vw; text-align: center;
+  }
+  #msg.show { opacity: 1; }
+  #controls {
+    position: fixed; top: 14px; left: 16px;
+    color: rgba(255,255,255,0.75); font-size: 12px; line-height: 1.7;
+    background: rgba(12,8,24,0.45);
+    padding: 8px 12px; border-radius: 8px;
+    z-index: 5;
+  }
+
+  /* ---------- Ushlandingiz ---------- */
+  #busted {
+    position: fixed; inset: 0;
+    background: rgba(80,0,10,0.55);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    z-index: 20;
+  }
+  #busted.show { opacity: 1; }
+  #busted h1 {
+    color: #fff; font-size: 64px; font-style: italic; font-weight: 900;
+    text-shadow: 0 0 30px #ff2a4d, 0 4px 0 #7a0018;
+    letter-spacing: 4px;
+  }
+  #busted p { color: #ffd9a8; font-size: 22px; margin-top: 12px; font-weight: 600; }
+  #busted #copline { font-size: 16px; opacity: 0.85; font-style: italic; }
+
+  /* ---------- Boshlash ekrani ---------- */
+  #start {
+    position: fixed; inset: 0; z-index: 30;
+    background:
+      radial-gradient(ellipse at 50% 120%, rgba(247,150,80,0.5), transparent 55%),
+      linear-gradient(180deg, #171242 0%, #452a6e 45%, #b74a8e 75%, #e8746a 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.6s;
+  }
+  #start.hidden { opacity: 0; pointer-events: none; }
+  #start h1 {
+    font-size: clamp(52px, 9vw, 110px);
+    font-style: italic; font-weight: 900; letter-spacing: 2px;
+    background: linear-gradient(180deg, #ff9de2 15%, #ff5fb0 45%, #ffc46b 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 24px rgba(255,95,176,0.55));
+  }
+  #start h1 span { color: #7df9ff; -webkit-text-fill-color: #7df9ff; filter: drop-shadow(0 0 18px rgba(125,249,255,0.8)); }
+  #start .tag { color: #ffe3c2; font-size: 18px; margin-top: 6px; letter-spacing: 1px; }
+  #start .ctr {
+    margin-top: 34px; color: rgba(255,255,255,0.92);
+    background: rgba(10,6,28,0.5);
+    padding: 16px 28px; border-radius: 14px;
+    font-size: 15px; line-height: 2;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  #start .ctr b { color: #7df9ff; font-weight: 700; }
+  #playBtn {
+    margin-top: 34px;
+    font-size: 26px; font-weight: 800; font-style: italic; letter-spacing: 3px;
+    color: #2a0a34;
+    background: linear-gradient(180deg, #ffe97a, #ffb84d);
+    border: none; border-radius: 14px;
+    padding: 16px 64px; cursor: pointer;
+    box-shadow: 0 0 34px rgba(255,185,77,0.55);
+    transition: transform 0.15s;
+  }
+  #playBtn:hover { transform: scale(1.06); }
+  .palm { position: absolute; bottom: -10px; font-size: 120px; opacity: 0.85; user-select: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+  <canvas id="minimap" width="170" height="190"></canvas>
+  <div id="wanted"></div>
+  <div id="carinfo">
+    <div id="speed">0</div>
+    <div id="speedunit">KM/SOAT</div>
+    <div id="carname">Piyoda</div>
+    <div id="plate"></div>
+  </div>
+  <div id="msg"></div>
+  <div id="controls">
+    <b>W A S D</b> — harakat &nbsp;·&nbsp; <b>F</b> — mashinaga kirish/chiqish<br>
+    <b>Shift</b> — yugurish &nbsp;·&nbsp; <b>Space</b> — qo'l tormozi &nbsp;·&nbsp; <b>H</b> — signal &nbsp;·&nbsp; <b>C</b> — kamera
+  </div>
+
+  <div id="busted">
+    <h1>USHLANDINGIZ!</h1>
+    <p id="fine"></p>
+    <p id="copline"></p>
+  </div>
+
+  <div id="start">
+    <span class="palm" style="left:4%">🌴</span>
+    <span class="palm" style="right:4%">🌴</span>
+    <h1>VICE CITY <span>UZ</span></h1>
+    <p class="tag">O'zbekcha haydash o'yini — ikki orol, bitta shahar, cheksiz erkinlik</p>
+    <div class="ctr">
+      <b>W A S D</b> yoki strelkalar — yurish / haydash<br>
+      <b>F</b> yoki <b>E</b> — istalgan mashinaga kirish / chiqish<br>
+      <b>Shift</b> — yugurish · <b>Space</b> — qo'l tormozi (drift!)<br>
+      <b>H</b> — signal (gudok) · <b>C</b> — kamera uzoq/yaqin<br>
+      Piyodani urmang — politsiya darrov qidiruvga chiqadi! ⭐
+    </div>
+    <button id="playBtn">BOSHLASH</button>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
