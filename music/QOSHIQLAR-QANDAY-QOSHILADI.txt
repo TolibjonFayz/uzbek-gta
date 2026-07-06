@@ -1,0 +1,22 @@
+HAQIQIY O'ZBEK QO'SHIQLARINI QO'SHISH
+======================================
+
+1-usul (eng oson):
+  O'zingizdagi MP3 fayllarni shu "music" papkasiga tashlang.
+  O'yin ularni avtomatik topib, radioda chaladi.
+  Fayl nomi qo'shiq nomi sifatida ko'rsatiladi,
+  masalan: "Yulduz Usmonova - Jonim.mp3"
+
+2-usul (aniq ro'yxat):
+  playlist.json faylini oching va tracks ichiga yozing:
+
+  {
+    "tracks": [
+      { "title": "Sevara - Yol Bolsin", "file": "sevara-yol-bolsin.mp3" },
+      { "title": "Radio kuy", "file": "https://misol.uz/kuy.mp3" }
+    ]
+  }
+
+Eslatma: mualliflik huquqi tufayli o'yin bilan birga haqiqiy qo'shiq
+fayllari berilmaydi — o'zingizning qonuniy fayllaringizni ishlating.
+MP3 topilmasa, o'yin sintez qilingan xalq kuylarini chaladi.

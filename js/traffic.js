@@ -1,168 +1,374 @@
-import * as THREE from 'three';
-import { rand, pick, clamp, angleLerp } from './utils.js';
-import { LANE, isOnLand } from './config.js';
-import { randomNode, nextNode } from './network.js';
-import { makeVehicle, makeMoto, pickModel, MODELS } from './cars.js';
-import { makeSeatedRider } from './peds.js';
-import { pushOut } from './physics.js';
+// ============ Svetaforlar (mustaqil sikllar + sekund hisoblagich) va traffic AI ============
+window.G = window.G || {};
 
-export class TrafficCar {
-  constructor(veh, net) {
-    this.veh = veh;
-    this.net = net;
-    this.active = true;
-    this.stopT = 0;
-    this.cur = 0;
-    this.base = rand(8, 13) * (veh.kind === 'moto' ? 1.25 : 1);
-    const from = randomNode(net);
-    this.setEdge(from, nextNode(from, null));
-    this.t = rand(0, this.len);
-    veh.mesh.position.set(this.ix(), 0, this.iz());
-    veh.heading = Math.atan2(this.dirx, this.dirz);
-    veh.mesh.rotation.y = veh.heading;
+(function () {
+  // ---------- SVETAFOR SIKLLARI ----------
+  // 22s sikl: NS yashil 0-8 | NS sariq 8-10 | hamma qizil 10-11 |
+  //           EW yashil 11-19 | EW sariq 19-21 | hamma qizil 21-22
+  var CYCLE = 22;
+  var clock = 0;
+
+  function offsetFor(ix, iz) {
+    return Math.abs(ix * 31 + iz * 17 + 1000000) % CYCLE;
+  }
+  function phaseT(ix, iz) {
+    return (clock + offsetFor(ix, iz)) % CYCLE;
   }
 
-  setEdge(from, to) {
-    this.from = from; this.to = to;
-    const dx = to.x - from.x, dz = to.z - from.z;
-    this.len = Math.hypot(dx, dz);
-    this.dirx = dx / this.len; this.dirz = dz / this.len;
-    this.rx = -this.dirz; this.rz = this.dirx;
-    this.t = 0;
+  function stateAt(axis, ix, iz) {
+    var t = phaseT(ix, iz);
+    if (axis === 'NS') {
+      if (t < 8) return 'green';
+      if (t < 10) return 'yellow';
+      return 'red';
+    } else {
+      if (t < 11) return 'red';
+      if (t < 19) return 'green';
+      if (t < 21) return 'yellow';
+      return 'red';
+    }
+  }
+  // joriy holat tugashigacha qolgan sekundlar (hisoblagich uchun)
+  function remainAt(axis, ix, iz) {
+    var t = phaseT(ix, iz);
+    if (axis === 'NS') {
+      if (t < 8) return 8 - t;        // yashil qolgan
+      if (t < 10) return 10 - t;      // sariq
+      return CYCLE - t;               // qizil (keyingi yashilgacha)
+    } else {
+      if (t < 11) return 11 - t;      // qizil
+      if (t < 19) return 19 - t;      // yashil
+      if (t < 21) return 21 - t;      // sariq
+      return 11 + CYCLE - t;          // qizil (o'rab)
+    }
   }
 
-  ix() { return this.from.x + this.dirx * this.t + this.rx * LANE; }
-  iz() { return this.from.z + this.dirz * this.t + this.rz * LANE; }
-
-  update(dt, registry, playerFootPos) {
-    const v = this.veh;
-    if (!this.active || v.driver !== 'ai') return;
-    if (this.stopT > 0) {
-      this.stopT -= dt;
-      this.cur = 0; v.speed = 0; v.vel.set(0, 0, 0);
-      return;
+  // ---------- HISOBLAGICH TEKSTURALARI ----------
+  var cdTex = {}; // key: ix,iz,axis
+  G.signalCountdownTexture = function (ix, iz, axis) {
+    var key = ix + ',' + iz + ',' + axis;
+    if (!cdTex[key]) {
+      var cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      var tex = new THREE.CanvasTexture(cv);
+      cdTex[key] = { cv: cv, c2: cv.getContext('2d'), tex: tex, last: '', ix: ix, iz: iz, axis: axis };
     }
-    let target = this.base;
-    if (this.len - this.t < 16) target = Math.min(target, 6);
+    return cdTex[key].tex;
+  };
 
-    const px = v.mesh.position.x, pz = v.mesh.position.z;
-    const fx = Math.sin(v.heading), fz = Math.cos(v.heading);
-    for (const o of registry) {
-      if (o === v || o.sinking) continue;
-      const ox = o.mesh.position.x - px, oz = o.mesh.position.z - pz;
-      const d = Math.hypot(ox, oz);
-      if (d > 12 || d < 0.001) continue;
-      if ((ox * fx + oz * fz) / d > 0.72) target = Math.min(target, Math.max(0, (d - 4.5) * 1.1));
+  function updateCountdowns(px, pz) {
+    for (var key in cdTex) {
+      var e = cdTex[key];
+      var dx = e.ix - px, dz = e.iz - pz;
+      if (dx * dx + dz * dz > 300 * 300) continue; // faqat yaqinlarini yangilash
+      var st = stateAt(e.axis, e.ix, e.iz);
+      var num = Math.ceil(remainAt(e.axis, e.ix, e.iz));
+      var text = st + num;
+      if (text === e.last) continue;
+      e.last = text;
+      var c2 = e.c2;
+      c2.clearRect(0, 0, 64, 64);
+      c2.fillStyle = 'rgba(10,10,14,0.85)';
+      c2.fillRect(6, 8, 52, 48);
+      c2.fillStyle = st === 'green' ? '#35e05a' : (st === 'yellow' ? '#ffb020' : '#ff4033');
+      c2.font = 'bold 38px Arial';
+      c2.textAlign = 'center';
+      c2.textBaseline = 'middle';
+      c2.fillText(String(num), 32, 33);
+      e.tex.needsUpdate = true;
     }
-    if (playerFootPos) {
-      const ox = playerFootPos.x - px, oz = playerFootPos.z - pz;
-      const d = Math.hypot(ox, oz);
-      if (d < 9 && d > 0.001 && (ox * fx + oz * fz) / d > 0.6) {
-        target = Math.min(target, Math.max(0, (d - 3) * 1.2));
+  }
+
+  G.trafficSignals = {
+    state: stateAt,
+    remain: remainAt,
+    // piyoda o'tishi mumkinmi: 'V' = vertikal yo'lni kesish (NS oqim qizil bo'lsin)
+    pedCanCross: function (crossAxis, ix, iz) {
+      var t = phaseT(ix, iz);
+      if (crossAxis === 'V') return t > 11.5 && t < 18.5;
+      return t > 0.5 && t < 7.5;
+    },
+    update: function (dt, px, pz) {
+      clock += dt;
+      updateCountdowns(px || 0, pz || 0);
+      // lampalar (faqat yaqinlarini)
+      for (var i = 0; i < G.lightPoles.length; i++) {
+        var p = G.lightPoles[i];
+        var dx = p.ix - px, dz = p.iz - pz;
+        if (dx * dx + dz * dz > 350 * 350) continue;
+        var st = stateAt(p.axis, p.ix, p.iz);
+        if (p.lastState === st) continue;
+        p.lastState = st;
+        ['r', 'y', 'g'].forEach(function (k) {
+          var mat = p.lamps[k];
+          var on = (st === 'red' && k === 'r') || (st === 'yellow' && k === 'y') || (st === 'green' && k === 'g');
+          if (on) {
+            mat.color.setHex(mat.userData.onColor);
+            mat.emissive.setHex(mat.userData.onColor);
+          } else {
+            mat.color.setHex(0x1c1c1c);
+            mat.emissive.setHex(0x000000);
+          }
+        });
       }
     }
+  };
 
-    this.cur += clamp(target - this.cur, -16 * dt, 7 * dt);
-    this.t += this.cur * dt;
-    if (this.t >= this.len) {
-      const carry = this.t - this.len;
-      const prev = this.to;
-      const nn = nextNode(this.to, this.from);
-      this.setEdge(prev, nn);
-      this.t = carry;
+  // ---------- BARCHA MASHINALAR ----------
+  G.allCars = [];
+  G.onCarCrash = null; // main.js o'rnatadi
+
+  var trafficCars = [];
+
+  function laneOffsets(road) {
+    if (road.main) return [4, 9.8];
+    if (road.ring) return [3.5, 7.5];
+    return [4.2];
+  }
+
+  function spawnTrafficCar(scene, road, dir, along, laneOff) {
+    var name = G.pick(G.CAR_NAMES);
+    var x, z, heading;
+    if (road.vertical) {
+      x = road.pos + dir * laneOff;
+      z = along;
+      heading = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+    } else {
+      z = road.pos - dir * laneOff;
+      x = along;
+      heading = dir > 0 ? 0 : Math.PI;
     }
-    const k = 1 - Math.exp(-6 * dt);
-    v.mesh.position.x += (this.ix() - v.mesh.position.x) * k;
-    v.mesh.position.z += (this.iz() - v.mesh.position.z) * k;
-    v.heading = angleLerp(v.heading, Math.atan2(this.dirx, this.dirz), 1 - Math.exp(-7 * dt));
-    v.mesh.rotation.y = v.heading;
-    for (const w of v.wheels) w.rotation.x += this.cur * dt / 0.33;
-    v.speed = this.cur;
-    v.vel.set(fx * this.cur, 0, fz * this.cur);
+    var car = G.makeCarEntity(name, x, z, heading);
+    car.isTraffic = true;
+    car.road = road;
+    car.dir = dir;
+    car.laneOff = laneOff;
+    car.targetSpeed = road.main ? G.rand(12, 17) : (road.ring ? G.rand(14, 18) : G.rand(9, 13));
+    scene.add(car.mesh);
+    trafficCars.push(car);
+    G.allCars.push(car);
+    return car;
   }
-}
 
-export class TrafficManager {
-  constructor(scene, net, registry, { cars = 24, motos = 6, parked = 10 } = {}) {
-    this.scene = scene; this.net = net; this.registry = registry;
-    this.list = [];
-    this.byVeh = new Map();
-
-    for (let i = 0; i < cars; i++) {
-      const veh = makeVehicle(pickModel());
-      veh.driver = 'ai';
-      this.add(veh);
+  G.initTraffic = function (scene) {
+    var count = G.IS_TOUCH ? 32 : 60;
+    var roads = G.TRAFFIC_ROADS;
+    for (var i = 0; i < count; i++) {
+      var road = roads[i % roads.length];
+      var offs = laneOffsets(road);
+      var dir = i % 2 === 0 ? 1 : -1;
+      var along = G.rand(-G.MAP + 80, G.MAP - 80);
+      spawnTrafficCar(scene, road, dir, along, G.pick(offs));
     }
-    for (let i = 0; i < motos; i++) {
-      const veh = makeMoto();
-      veh.driver = 'ai';
-      veh.rider = makeSeatedRider();
-      veh.rider.position.set(0, 0.55, -0.32);
-      veh.mesh.add(veh.rider);
-      this.add(veh);
-    }
+  };
 
-    // Turargohda turgan mashinalar — birinchisi doim spawn yonidagi oq Cobalt
-    this.spawnParkedAt(MODELS[0], '#f5f5f3', 615.8, 82, Math.PI);
-    for (let i = 0; i < parked - 1; i++) this.spawnParkedRandom();
-  }
+  G.removeFromTraffic = function (car) {
+    var i = trafficCars.indexOf(car);
+    if (i >= 0) trafficCars.splice(i, 1);
+    car.isTraffic = false;
+  };
 
-  add(veh) {
-    const tc = new TrafficCar(veh, this.net);
-    this.list.push(tc);
-    this.byVeh.set(veh, tc);
-    this.registry.push(veh);
-    this.scene.add(veh.mesh);
-  }
-
-  spawnParkedAt(model, color, x, z, heading) {
-    const veh = makeVehicle(model, color);
-    veh.mesh.position.set(x, 0, z);
-    veh.heading = heading;
-    veh.mesh.rotation.y = heading;
-    this.registry.push(veh);
-    this.scene.add(veh.mesh);
-    return veh;
-  }
-
-  spawnParkedRandom() {
-    for (let tries = 0; tries < 20; tries++) {
-      const from = randomNode(this.net);
-      const to = nextNode(from, null);
-      const len = Math.hypot(to.x - from.x, to.z - from.z);
-      if (len > 400) continue; // ko'priklarga qo'ymaymiz
-      const dirx = (to.x - from.x) / len, dirz = (to.z - from.z) / len;
-      const t = rand(15, len - 15);
-      const side = pick([1, -1]);
-      const x = from.x + dirx * t + (-dirz) * 5.8 * side;
-      const z = from.z + dirz * t + dirx * 5.8 * side;
-      if (!isOnLand(x, z)) continue;
-      const heading = Math.atan2(dirx * side, dirz * side);
-      this.spawnParkedAt(pickModel(), null, x, z, heading);
+  // uzoqlashib ketgan mashinani o'yinchi atrofiga qayta joylash
+  function recycle(car, px, pz) {
+    var roads = G.TRAFFIC_ROADS;
+    for (var attempt = 0; attempt < 6; attempt++) {
+      var road = G.pick(roads);
+      // yo'l o'yinchidan 450 dan uzoq bo'lmasin
+      var perp = road.vertical ? Math.abs(road.pos - px) : Math.abs(road.pos - pz);
+      if (perp > 450) continue;
+      var center = road.vertical ? pz : px;
+      var along = center + (Math.random() < 0.5 ? -1 : 1) * G.rand(240, 430);
+      if (Math.abs(along) > G.MAP - 60) continue;
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      var laneOff = G.pick(laneOffsets(road));
+      var nx, nz;
+      if (road.vertical) { nx = road.pos + dir * laneOff; nz = along; }
+      else { nz = road.pos - dir * laneOff; nx = along; }
+      // boshqa mashinaga juda yaqin bo'lmasin
+      var ok = true;
+      for (var j = 0; j < G.allCars.length; j++) {
+        var o = G.allCars[j];
+        var ddx = o.x - nx, ddz = o.z - nz;
+        if (ddx * ddx + ddz * ddz < 15 * 15) { ok = false; break; }
+      }
+      if (!ok) continue;
+      if (G.repairCar) G.repairCar(car); // shikastни tiklab qayta ishlatamiz
+      car.road = road;
+      car.dir = dir;
+      car.laneOff = laneOff;
+      car.x = nx; car.z = nz;
+      car.heading = road.vertical ? (dir > 0 ? Math.PI / 2 : -Math.PI / 2) : (dir > 0 ? 0 : Math.PI);
+      car.speed = G.rand(4, 9);
+      car.targetSpeed = road.main ? G.rand(12, 17) : (road.ring ? G.rand(14, 18) : G.rand(9, 13));
       return;
     }
   }
 
-  steal(veh) {
-    const tc = this.byVeh.get(veh);
-    if (tc) tc.active = false;
-  }
+  var recycleIdx = 0;
 
-  onHit(veh) {
-    const tc = this.byVeh.get(veh);
-    if (tc && tc.active) tc.stopT = 6;
-  }
+  G.updateTraffic = function (dt, px, pz) {
+    for (var i = 0; i < trafficCars.length; i++) {
+      var car = trafficCars[i];
+      var road = car.road;
+      var along = road.vertical ? car.z : car.x;
+      var axis = road.vertical ? 'NS' : 'EW';
+      var desired = car.targetSpeed;
 
-  update(dt, playerFootPos) {
-    for (const tc of this.list) tc.update(dt, this.registry, playerFootPos);
+      // masofa bo'yicha qayta joylash (har kadrda bir nechtasini tekshiramiz)
+      if (i % 20 === recycleIdx % 20) {
+        var pdx = car.x - px, pdz = car.z - pz;
+        var pd2 = pdx * pdx + pdz * pdz;
+        if (pd2 > 650 * 650) { recycle(car, px, pz); continue; }
+        // juda uzoqdagilarni chizmaslik (tuman baribir yashiradi)
+        car.mesh.visible = pd2 < 450 * 450;
+      }
 
-    // Haydovchisiz dumalab ketayotgan mashinalar (o'yinchi tashlab ketgan)
-    for (const v of this.registry) {
-      if (v.driver !== null || v.sinking) continue;
-      if (v.vel.lengthSq() < 0.02) { v.vel.set(0, 0, 0); continue; }
-      v.vel.multiplyScalar(Math.pow(0.93, dt * 60));
-      v.mesh.position.addScaledVector(v.vel, dt);
-      pushOut(v.mesh.position, v.radius);
+      // 1) svetafor — yo'ldagi keyingi chiroqli chorraha
+      if (road.lightedAt && road.lightedAt.length) {
+        var bestDist = 1e9, bestCross = null;
+        for (var c = 0; c < road.lightedAt.length; c++) {
+          var cr = road.lightedAt[c];
+          var stopLine = cr.pos - car.dir * (cr.crossHalfW + 3.5);
+          var dist = (stopLine - along) * car.dir;
+          if (dist > -1.5 && dist < bestDist) { bestDist = dist; bestCross = cr; }
+        }
+        if (bestCross && bestDist < 28) {
+          var ix = road.vertical ? road.pos : bestCross.pos;
+          var iz = road.vertical ? bestCross.pos : road.pos;
+          var st = stateAt(axis, ix, iz);
+          if (st !== 'green') {
+            if (!(st === 'yellow' && bestDist < 7 && car.speed > 6)) {
+              desired = Math.min(desired, Math.max(0, (bestDist - 2.5) * 0.8));
+              if (bestDist < 3) desired = 0;
+            }
+          }
+        }
+      }
+
+      // 2) oldindagi mashina
+      for (var j = 0; j < G.allCars.length; j++) {
+        var o = G.allCars[j];
+        if (o === car) continue;
+        var lat, ahead;
+        if (road.vertical) {
+          lat = Math.abs(o.x - car.x);
+          ahead = (o.z - car.z) * car.dir;
+        } else {
+          lat = Math.abs(o.z - car.z);
+          ahead = (o.x - car.x) * car.dir;
+        }
+        if (lat < 2.4 && ahead > 0 && ahead < 26) {
+          var gap = ahead - (car.spec.len + o.spec.len) / 2;
+          if (gap < 3) desired = 0;
+          else if (gap < 14) desired = Math.min(desired, Math.max(0, o.speed + (gap - 4) * 0.6));
+        }
+      }
+
+      // tezlik
+      if (car.speed < desired) car.speed = Math.min(desired, car.speed + 7 * dt);
+      else car.speed = Math.max(desired, car.speed - 15 * dt);
+
+      // harakat
+      if (road.vertical) {
+        car.z += car.dir * car.speed * dt;
+        var laneX = road.pos + car.dir * car.laneOff;
+        car.x = G.lerp(car.x, laneX, Math.min(1, 2 * dt));
+        if (Math.abs(car.z) > G.MAP - 40) recycle(car, px, pz);
+      } else {
+        car.x += car.dir * car.speed * dt;
+        var laneZ = road.pos - car.dir * car.laneOff;
+        car.z = G.lerp(car.z, laneZ, Math.min(1, 2 * dt));
+        if (Math.abs(car.x) > G.MAP - 40) recycle(car, px, pz);
+      }
+      G.updateCarMesh(car);
     }
-  }
-}
+    recycleIdx++;
+  };
+
+  // ---------- MASHINALAR O'ZARO TO'QNASHUVI (aylanalar zanjiri bo'yicha) ----------
+  G.resolveCarCollisions = function () {
+    for (var i = 0; i < G.allCars.length; i++) {
+      var a = G.allCars[i];
+      for (var j = i + 1; j < G.allCars.length; j++) {
+        var b = G.allCars[j];
+        // keng bosqich
+        var bdx = b.x - a.x, bdz = b.z - a.z;
+        var br = a.radius + b.radius;
+        if (bdx * bdx + bdz * bdz > br * br) continue;
+
+        // aniq bosqich: aylanalar juftliklari orasidan eng chuqur kirishni topish
+        var ca = G.carCircles(a), cb = G.carCircles(b);
+        var maxOv = 0, nX = 0, nZ = 0;
+        for (var m = 0; m < ca.length; m++) {
+          for (var n = 0; n < cb.length; n++) {
+            var dx = cb[n].x - ca[m].x, dz = cb[n].z - ca[m].z;
+            var rr = ca[m].r + cb[n].r;
+            var d2 = dx * dx + dz * dz;
+            if (d2 < rr * rr) {
+              var d = Math.sqrt(Math.max(d2, 0.0001));
+              var ov = rr - d;
+              if (ov > maxOv) { maxOv = ov; nX = dx / d; nZ = dz / d; }
+            }
+          }
+        }
+        if (maxOv > 0) {
+          var aStatic = a.isParked, bStatic = b.isParked;
+          if (aStatic && bStatic) continue;
+          var aShare = aStatic ? 0 : (bStatic ? 1 : 0.5);
+          var bShare = 1 - aShare;
+          a.x -= nX * maxOv * aShare;
+          a.z -= nZ * maxOv * aShare;
+          b.x += nX * maxOv * bShare;
+          b.z += nZ * maxOv * bShare;
+          // urilish kuchi (normal bo'yicha nisbiy tezlik)
+          var vax = Math.cos(a.heading) * a.speed, vaz = Math.sin(a.heading) * a.speed;
+          var vbx = Math.cos(b.heading) * b.speed, vbz = Math.sin(b.heading) * b.speed;
+          var impact = Math.abs((vax - vbx) * nX + (vaz - vbz) * nZ);
+          a.speed *= 0.72;
+          b.speed *= 0.72;
+          if (impact > 3.5 && G.onCarCrash) G.onCarCrash(a, b, impact);
+          if (impact > 4.5 && G.damageCar) {
+            var dmg = Math.min(0.16, impact * 0.007); // ~6 urishda portlaydi
+            G.damageCar(a, dmg); G.damageCar(b, dmg);
+          }
+          G.updateCarMesh(a);
+          G.updateCarMesh(b);
+        }
+      }
+    }
+  };
+
+  // ---------- TURARGOHDAGI MASHINALAR ----------
+  G.initParkedCars = function (scene) {
+    var spots = [
+      { x: 26, z: -42, h: Math.PI / 2, m: 'Cobalt', c: '#f4f6f5' },
+      { x: 26, z: -52, h: Math.PI / 2, m: 'Nexia 3' },
+      { x: 95, z: 42, h: 0, m: 'Damas' },
+      { x: 103, z: 42, h: 0, m: 'Matiz' },
+      { x: 111, z: 42, h: 0, m: 'Spark' },
+      { x: 87, z: 42, h: 0, m: 'Tahoe' },
+      { x: 45, z: 40, h: 0, m: 'Malibu 2' },
+      { x: 60, z: 40, h: 0, m: 'Kia K5' },
+      { x: -60, z: 40, h: 0, m: 'Hyundai Elantra' },
+      { x: 50, z: 190, h: 0, m: 'Hyundai Sonata' },
+      { x: 82, z: 190, h: 0, m: 'Kia Sonet' },
+      { x: -600, z: -560, h: 0, m: 'Damas' },
+      { x: -610, z: -560, h: 0, m: 'Damas' },
+      { x: -590, z: -560, h: 0, m: 'Monza' },
+      { x: 420, z: 210, h: Math.PI / 2, m: 'Traverse' },
+      { x: 420, z: 220, h: Math.PI / 2, m: 'Onix' }
+    ];
+    [[99, 47, 40, 14], [52, 45, 30, 14], [-60, 45, 20, 12], [26, -47, 12, 24], [66, 195, 44, 12], [-600, -565, 30, 12], [425, 215, 14, 24]].forEach(function (p) {
+      var pad = new THREE.Mesh(new THREE.PlaneGeometry(p[2], p[3]), G.mat(0x4a4d50));
+      pad.rotation.x = -Math.PI / 2;
+      pad.position.set(p[0], 0.03, p[1]);
+      scene.add(pad);
+    });
+    spots.forEach(function (s) {
+      var car = G.makeCarEntity(s.m || G.pick(G.CAR_NAMES), s.x, s.z, s.h, s.c);
+      car.isParked = true;
+      scene.add(car.mesh);
+      G.allCars.push(car);
+    });
+  };
+})();

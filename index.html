@@ -2,161 +2,244 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vice City UZ — O'zbekcha haydash o'yini</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TASHKENT CITY — Uzbek GTA</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1030; font-family: 'Segoe UI', Arial, sans-serif; }
-  canvas.game { display: block; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Segoe UI',Arial,sans-serif; touch-action:none; overscroll-behavior:none; }
+  #c { display:block; width:100%; height:100%; }
+
+  /* ---------- Loading / start screen ---------- */
+  #startScreen {
+    position:fixed; inset:0; z-index:100; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; text-align:center;
+    background:linear-gradient(180deg,#0b1e3d 0%,#1a4a7a 55%,#e8a33d 100%);
+  }
+  #startScreen h1 { color:#fff; font-size:min(9vw,64px); letter-spacing:4px; text-shadow:0 4px 24px rgba(0,0,0,.6); font-style:italic; }
+  #startScreen h1 span { color:#ffd23f; }
+  #startScreen p.sub { color:#cfe3ff; font-size:min(4vw,18px); max-width:640px; padding:0 20px; }
+  #startBtn {
+    margin-top:8px; padding:16px 54px; font-size:min(5.5vw,26px); font-weight:bold; color:#0b1e3d;
+    background:#ffd23f; border:none; border-radius:40px; cursor:pointer; letter-spacing:2px;
+    box-shadow:0 6px 24px rgba(255,210,63,.45); transition:transform .15s;
+  }
+  #startBtn:active { transform:scale(.95); }
+  #startScreen .keys { color:#9fc2ee; font-size:min(3.2vw,14px); line-height:1.9; }
+  #startScreen .keys b { color:#ffd23f; }
 
   /* ---------- HUD ---------- */
-  #minimap {
-    position: fixed; left: 16px; bottom: 16px;
-    border: 2px solid rgba(255,255,255,0.55);
-    border-radius: 10px;
-    opacity: 0.92;
-    z-index: 5;
+  .hud { position:fixed; z-index:20; color:#fff; user-select:none; pointer-events:none; }
+  #songBar {
+    top:44px; left:50%; transform:translateX(-50%);
+    background:rgba(10,20,40,.72); border:1px solid rgba(255,210,63,.5); border-radius:20px;
+    padding:5px 16px; font-size:13px; white-space:nowrap; display:none; backdrop-filter:blur(4px);
   }
+  #songBar b { color:#ffd23f; }
+  #clock {
+    top:8px; left:50%; transform:translateX(-50%);
+    background:rgba(10,20,40,.72); border:1px solid rgba(255,255,255,.2); border-radius:16px;
+    padding:5px 16px; font-size:16px; font-weight:bold; letter-spacing:1px; display:none;
+    backdrop-filter:blur(4px);
+  }
+  #speedo {
+    bottom:14px; left:50%; transform:translateX(-50%);
+    background:rgba(10,20,40,.72); border-radius:16px; padding:6px 22px;
+    font-size:22px; font-weight:bold; display:none; border:1px solid rgba(255,255,255,.2);
+  }
+  #speedo small { font-size:11px; font-weight:normal; opacity:.75; }
+  #fuelBar {
+    bottom:52px; left:50%; transform:translateX(-50%); width:150px; height:14px;
+    background:rgba(10,20,40,.72); border:1px solid rgba(255,255,255,.25); border-radius:8px;
+    display:none; overflow:hidden;
+  }
+  #fuelBar::before { content:"⛽"; position:absolute; left:-20px; top:-3px; font-size:14px; }
+  #fuelFill { height:100%; width:100%; background:linear-gradient(90deg,#eb5757,#f2c94c,#5be07a); }
+  #hint {
+    bottom:90px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,.6); border-radius:10px; padding:8px 18px; font-size:15px; display:none;
+  }
+  #hint b { color:#ffd23f; }
+  #money {
+    top:8px; left:12px; background:rgba(10,20,40,.72); border:1px solid rgba(80,224,106,.5);
+    border-radius:14px; padding:5px 14px; font-size:15px; font-weight:bold; color:#5be07a;
+    display:none; backdrop-filter:blur(4px);
+  }
+  #energyBar {
+    top:38px; left:26px; width:132px; height:13px; background:rgba(10,20,40,.72);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; display:none; overflow:hidden;
+  }
+  #energyBar::before { content:"⚡"; position:absolute; left:-17px; top:-3px; font-size:13px; }
+  #energyFill { height:100%; width:100%; background:linear-gradient(90deg,#f2c94c,#eb5757); }
+  #controlsBox {
+    top:60px; left:10px; background:rgba(10,20,40,.6); border-radius:10px;
+    padding:9px 13px; font-size:12px; line-height:1.75; backdrop-filter:blur(3px);
+  }
+  /* ---------- Ovqat menyusi ---------- */
+  #foodMenu {
+    position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
+  }
+  #foodMenu .fm-box {
+    background:#12203a; border:2px solid #ffd23f; border-radius:16px; padding:18px 20px;
+    width:min(90vw,360px); color:#fff; box-shadow:0 10px 40px rgba(0,0,0,.6);
+  }
+  .fm-title { font-size:23px; font-weight:bold; color:#ffd23f; text-align:center; margin-bottom:4px; letter-spacing:1px; }
+  .fm-sub { font-size:12px; text-align:center; opacity:.7; margin-bottom:12px; }
+  .fm-list { display:flex; flex-direction:column; gap:8px; }
+  .fm-item {
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:10px;
+    padding:10px 14px; cursor:pointer; font-size:15px;
+  }
+  .fm-item:active { background:rgba(255,210,63,.25); }
+  .fm-item.no { opacity:.45; }
+  .fm-item .price { color:#5be07a; font-weight:bold; margin-left:10px; }
+  .fm-item .en { color:#f2c94c; font-size:12px; margin-left:8px; }
+  .fm-foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:13px; }
+  #fmClose { background:#ffd23f; color:#0b1e3d; border:none; border-radius:20px; padding:8px 22px; font-weight:bold; cursor:pointer; }
+  #missionBar {
+    bottom:120px; left:50%; transform:translateX(-50%);
+    background:rgba(10,20,40,.78); border:1px solid rgba(255,210,63,.5); border-radius:14px;
+    padding:7px 18px; font-size:14px; white-space:nowrap; display:none; text-align:center; backdrop-filter:blur(4px);
+  }
+  #missionBar b { color:#ffd23f; }
+  #legend {
+    left:12px; bottom:14px; background:rgba(10,20,40,.72); border:1px solid rgba(255,255,255,.2);
+    border-radius:12px; padding:8px 12px; font-size:12px; line-height:1.7; display:none; backdrop-filter:blur(4px);
+  }
+  #legend .lg-t { color:#ffd23f; font-weight:bold; margin-bottom:2px; }
+  #legend .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  #missionToast {
+    top:34%; left:50%; transform:translateX(-50%); font-size:min(7vw,34px); font-weight:bold; font-style:italic;
+    color:#5be07a; text-shadow:0 3px 12px #000; opacity:0; transition:opacity .4s; text-align:center;
+  }
+  #controlsBox b { color:#ffd23f; display:inline-block; min-width:52px; }
+  #locName {
+    top:52px; left:50%; transform:translateX(-50%); font-size:20px; font-weight:bold; font-style:italic;
+    color:#ffd23f; text-shadow:0 2px 8px #000; opacity:0; transition:opacity 1s;
+  }
+  #carInfo {
+    bottom:82px; left:50%; transform:translateX(-50%);
+    background:rgba(10,20,40,.72); border:1px solid rgba(255,255,255,.2); border-radius:12px;
+    padding:5px 16px; font-size:13px; white-space:nowrap; display:none; text-align:center;
+  }
+  #carInfo b { color:#ffd23f; font-size:15px; }
+  #carInfo span { opacity:.8; }
   #wanted {
-    position: fixed; top: 14px; right: 18px;
-    color: #fff; font-weight: 700; font-size: 19px;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
-    z-index: 5;
+    top:170px; right:14px; font-size:26px; letter-spacing:3px; display:none;
+    text-shadow:0 2px 6px #000; filter:drop-shadow(0 0 4px rgba(255,60,60,.6));
   }
-  #wanted .hot { color: #ff5252; }
-  #wanted .dim { color: rgba(255,255,255,0.28); }
-  #carinfo {
-    position: fixed; right: 18px; bottom: 16px;
-    text-align: right; color: #fff;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
-    z-index: 5;
-  }
-  #speed { font-size: 46px; font-weight: 800; line-height: 1; font-style: italic; }
-  #speedunit { font-size: 12px; opacity: 0.8; letter-spacing: 2px; }
-  #carname { font-size: 17px; font-weight: 600; margin-top: 6px; color: #ffd9ec; }
-  #plate {
-    display: inline-block; margin-top: 4px;
-    background: #f6f6f2; color: #111;
-    font-weight: 700; font-size: 12px;
-    padding: 1px 8px; border-radius: 3px; border: 1px solid #333;
-    min-height: 14px;
-  }
-  #msg {
-    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-    background: rgba(12,8,24,0.78); color: #ffe9a8;
-    padding: 10px 22px; border-radius: 10px;
-    font-size: 16px; font-weight: 600;
-    opacity: 0; transition: opacity 0.35s;
-    pointer-events: none; z-index: 6;
-    max-width: 80vw; text-align: center;
-  }
-  #msg.show { opacity: 1; }
-  #controls {
-    position: fixed; top: 14px; left: 16px;
-    color: rgba(255,255,255,0.75); font-size: 12px; line-height: 1.7;
-    background: rgba(12,8,24,0.45);
-    padding: 8px 12px; border-radius: 8px;
-    z-index: 5;
-  }
-
-  /* ---------- Ushlandingiz ---------- */
   #busted {
-    position: fixed; inset: 0;
-    background: rgba(80,0,10,0.55);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    z-index: 20;
+    top:0; left:0; width:100%; height:100%; display:none;
+    align-items:center; justify-content:center; flex-direction:column;
+    background:rgba(60,0,0,.55); color:#fff; font-size:min(9vw,52px); font-weight:bold; font-style:italic;
+    text-align:center; z-index:60; letter-spacing:2px;
   }
-  #busted.show { opacity: 1; }
-  #busted h1 {
-    color: #fff; font-size: 64px; font-style: italic; font-weight: 900;
-    text-shadow: 0 0 30px #ff2a4d, 0 4px 0 #7a0018;
-    letter-spacing: 4px;
+  #busted small { font-size:min(4vw,20px); font-weight:normal; opacity:.85; font-style:normal; }
+  #minimap {
+    top:10px; right:10px; width:150px; height:150px; border-radius:50%;
+    border:3px solid rgba(255,255,255,.55); background:rgba(20,30,20,.85); z-index:20; position:fixed;
   }
-  #busted p { color: #ffd9a8; font-size: 22px; margin-top: 12px; font-weight: 600; }
-  #busted #copline { font-size: 16px; opacity: 0.85; font-style: italic; }
+  #orientTip {
+    top:50%; left:50%; transform:translate(-50%,-50%); font-size:16px; text-align:center;
+    background:rgba(0,0,0,.7); padding:12px 20px; border-radius:12px; display:none;
+  }
 
-  /* ---------- Boshlash ekrani ---------- */
-  #start {
-    position: fixed; inset: 0; z-index: 30;
-    background:
-      radial-gradient(ellipse at 50% 120%, rgba(247,150,80,0.5), transparent 55%),
-      linear-gradient(180deg, #171242 0%, #452a6e 45%, #b74a8e 75%, #e8746a 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: opacity 0.6s;
+  /* ---------- Mobile controls ---------- */
+  #joyZone { position:fixed; left:0; bottom:0; width:45%; height:60%; z-index:30; display:none; }
+  #joyBase {
+    position:fixed; width:124px; height:124px; border-radius:50%;
+    background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.35);
+    left:34px; bottom:34px; z-index:31; display:none; pointer-events:none;
   }
-  #start.hidden { opacity: 0; pointer-events: none; }
-  #start h1 {
-    font-size: clamp(52px, 9vw, 110px);
-    font-style: italic; font-weight: 900; letter-spacing: 2px;
-    background: linear-gradient(180deg, #ff9de2 15%, #ff5fb0 45%, #ffc46b 90%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 0 24px rgba(255,95,176,0.55));
+  #joyKnob {
+    position:absolute; width:56px; height:56px; border-radius:50%; left:32px; top:32px;
+    background:rgba(255,210,63,.85); box-shadow:0 2px 10px rgba(0,0,0,.5);
   }
-  #start h1 span { color: #7df9ff; -webkit-text-fill-color: #7df9ff; filter: drop-shadow(0 0 18px rgba(125,249,255,0.8)); }
-  #start .tag { color: #ffe3c2; font-size: 18px; margin-top: 6px; letter-spacing: 1px; }
-  #start .ctr {
-    margin-top: 34px; color: rgba(255,255,255,0.92);
-    background: rgba(10,6,28,0.5);
-    padding: 16px 28px; border-radius: 14px;
-    font-size: 15px; line-height: 2;
-    border: 1px solid rgba(255,255,255,0.18);
+  #btns { position:fixed; right:12px; bottom:22px; z-index:30; display:none; flex-direction:column; flex-wrap:wrap-reverse; max-height:82vh; gap:10px; align-items:flex-end; align-content:flex-end; }
+  .mbtn {
+    width:62px; height:62px; border-radius:50%; border:2px solid rgba(255,255,255,.4);
+    background:rgba(10,20,40,.6); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(2px); user-select:none; -webkit-user-select:none;
   }
-  #start .ctr b { color: #7df9ff; font-weight: 700; }
-  #playBtn {
-    margin-top: 34px;
-    font-size: 26px; font-weight: 800; font-style: italic; letter-spacing: 3px;
-    color: #2a0a34;
-    background: linear-gradient(180deg, #ffe97a, #ffb84d);
-    border: none; border-radius: 14px;
-    padding: 16px 64px; cursor: pointer;
-    box-shadow: 0 0 34px rgba(255,185,77,0.55);
-    transition: transform 0.15s;
-  }
-  #playBtn:hover { transform: scale(1.06); }
-  .palm { position: absolute; bottom: -10px; font-size: 120px; opacity: 0.85; user-select: none; }
+  .mbtn:active, .mbtn.on { background:rgba(255,210,63,.8); color:#0b1e3d; }
+  .mbtn small { font-size:9px; display:block; }
+  .mbtn .lbl { display:flex; flex-direction:column; align-items:center; line-height:1.05; }
 </style>
-<script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
-</script>
 </head>
 <body>
-  <canvas id="minimap" width="170" height="190"></canvas>
-  <div id="wanted"></div>
-  <div id="carinfo">
-    <div id="speed">0</div>
-    <div id="speedunit">KM/SOAT</div>
-    <div id="carname">Piyoda</div>
-    <div id="plate"></div>
-  </div>
-  <div id="msg"></div>
-  <div id="controls">
-    <b>W A S D</b> — harakat &nbsp;·&nbsp; <b>F</b> — mashinaga kirish/chiqish<br>
-    <b>Shift</b> — yugurish &nbsp;·&nbsp; <b>Space</b> — qo'l tormozi &nbsp;·&nbsp; <b>H</b> — signal &nbsp;·&nbsp; <b>C</b> — kamera
-  </div>
+<canvas id="c"></canvas>
 
-  <div id="busted">
-    <h1>USHLANDINGIZ!</h1>
-    <p id="fine"></p>
-    <p id="copline"></p>
+<div id="startScreen">
+  <h1>TASHKENT <span>CITY</span></h1>
+  <p class="sub">Katta Toshkent: 6 tuman, aeroport, vokzal, Magic City, Chorsu, Teleminora... 14 xil mashina, sekund hisoblagichli svetaforlar, radio. Haqiqiy qo'shiqlar uchun MP3 fayllarni <b>music/</b> papkasiga tashlang!</p>
+  <button id="startBtn">O'YINNI BOSHLASH</button>
+  <div class="keys">
+    <b>W A S D</b> — yurish / haydash &nbsp; <b>Enter</b> — mashinaga minish / tushish<br>
+    <b>Space</b> — sakrash &nbsp; <b>Ctrl</b> — o'tirish &nbsp; <b>Shift</b> — yugurish &nbsp; <b>F</b> — musht &nbsp; <b>E</b> — ovqat olish<br>
+    <b>V</b> — salon kamerasi &nbsp; <b>M</b> — keyingi qo'shiq &nbsp; <b>H</b> — klakson &nbsp; <b>T</b> — vaqtni tezlatish
   </div>
+</div>
 
-  <div id="start">
-    <span class="palm" style="left:4%">🌴</span>
-    <span class="palm" style="right:4%">🌴</span>
-    <h1>VICE CITY <span>UZ</span></h1>
-    <p class="tag">O'zbekcha haydash o'yini — ikki orol, bitta shahar, cheksiz erkinlik</p>
-    <div class="ctr">
-      <b>W A S D</b> yoki strelkalar — yurish / haydash<br>
-      <b>F</b> yoki <b>E</b> — istalgan mashinaga kirish / chiqish<br>
-      <b>Shift</b> — yugurish · <b>Space</b> — qo'l tormozi (drift!)<br>
-      <b>H</b> — signal (gudok) · <b>C</b> — kamera uzoq/yaqin<br>
-      Piyodani urmang — politsiya darrov qidiruvga chiqadi! ⭐
-    </div>
-    <button id="playBtn">BOSHLASH</button>
+<div id="clock" class="hud">☀️ 09:00</div>
+<div id="money" class="hud">💵 0 so'm</div>
+<div id="energyBar" class="hud"><div id="energyFill"></div></div>
+<div id="missionBar" class="hud"></div>
+<div id="legend" class="hud">
+  <div class="lg-t">🚕 Xizmatlar</div>
+  <div><span class="dot" style="background:#ffd23f"></span>Taksi — yo'lovchini oling</div>
+  <div><span class="dot" style="background:#3d8ec9"></span>Yetkazish — qutini oling</div>
+  <div><span class="dot" style="background:#33e06a"></span>Manzil — shu yerga eltib bering</div>
+</div>
+<div id="missionToast" class="hud"></div>
+
+<div id="foodMenu">
+  <div class="fm-box">
+    <div class="fm-title" id="fmTitle"></div>
+    <div class="fm-sub">Ovqat sotib oling — energiya to'plang</div>
+    <div class="fm-list" id="fmList"></div>
+    <div class="fm-foot"><span id="fmMoney"></span><button id="fmClose">Yopish ✕</button></div>
   </div>
+</div>
+<div id="songBar" class="hud">🎵 <b id="songTitle"></b> &nbsp;<span id="songKeyHint">[M — keyingi qo'shiq]</span></div>
+<div id="carInfo" class="hud"></div>
+<div id="wanted" class="hud"></div>
+<div id="busted" class="hud">QO'LGA OLINDINGIZ!<br><small>Militsiya sizni ushladi</small></div>
+<div id="locName" class="hud"></div>
+<div id="speedo" class="hud"><span id="speedVal">0</span> <small>km/soat</small></div>
+<div id="fuelBar" class="hud"><div id="fuelFill"></div></div>
+<div id="hint" class="hud"></div>
+<div id="controlsBox" class="hud"></div>
+<canvas id="minimap" width="150" height="150"></canvas>
+<div id="orientTip" class="hud">📱 Telefonni yotiq (landscape) holatda o'ynang — zo'r bo'ladi!</div>
 
-  <script type="module" src="js/main.js"></script>
+<div id="joyZone"></div>
+<div id="joyBase"><div id="joyKnob"></div></div>
+<div id="btns">
+  <div class="mbtn" id="mbEnter"><div class="lbl">🚗<small>Enter</small></div></div>
+  <div class="mbtn" id="mbFood"><div class="lbl">🍽️<small>Ovqat</small></div></div>
+  <div class="mbtn" id="mbPunch"><div class="lbl">👊<small>Musht</small></div></div>
+  <div class="mbtn" id="mbJump"><div class="lbl">⬆️<small>Sakrash</small></div></div>
+  <div class="mbtn" id="mbCrouch"><div class="lbl">🧎<small>O'tirish</small></div></div>
+  <div class="mbtn" id="mbBrake"><div class="lbl">🅿️<small>Tormoz</small></div></div>
+  <div class="mbtn" id="mbView"><div class="lbl">👁️<small>Kamera</small></div></div>
+  <div class="mbtn" id="mbMusic"><div class="lbl">🎵<small>Qo'shiq</small></div></div>
+  <div class="mbtn" id="mbHorn"><div class="lbl">📣<small>Signal</small></div></div>
+  <div class="mbtn" id="mbStation"><div class="lbl">⛽<small>Stansiya</small></div></div>
+  <div class="mbtn" id="mbTime"><div class="lbl">⏩<small>Vaqt</small></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/util.js?v=18"></script>
+<script src="js/audio.js?v=18"></script>
+<script src="js/daynight.js?v=18"></script>
+<script src="js/vehicles.js?v=18"></script>
+<script src="js/world.js?v=18"></script>
+<script src="js/traffic.js?v=18"></script>
+<script src="js/peds.js?v=18"></script>
+<script src="js/police.js?v=18"></script>
+<script src="js/damage.js?v=18"></script>
+<script src="js/missions.js?v=18"></script>
+<script src="js/main.js?v=18"></script>
 </body>
 </html>
