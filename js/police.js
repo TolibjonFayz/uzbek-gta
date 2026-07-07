@@ -55,8 +55,9 @@ window.G = window.G || {};
       var along = center + (Math.random() < 0.5 ? -1 : 1) * G.rand(160, 280);
       if (Math.abs(along) > G.MAP - 80) continue;
       var x, z, h;
-      if (road.vertical) { x = road.pos + 4; z = along; h = Math.PI / 2; }
-      else { z = road.pos - 4; x = along; h = 0; }
+      // o'ng qo'l harakati (dir=+1): vertikal x=pos-4, gorizontal z=pos+4
+      if (road.vertical) { x = road.pos - 4; z = along; h = Math.PI / 2; }
+      else { z = road.pos + 4; x = along; h = 0; }
       var car = makePoliceCar(x, z, h);
       scene.add(car.mesh);
       cars.push(car);

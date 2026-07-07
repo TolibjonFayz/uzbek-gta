@@ -96,6 +96,66 @@ Ikkalasi ham xaritada joy nomi va minimapda ko'rinadi.
 - **Traffic hamisha atrofda**: uzoqlashgan mashinalar/piyodalar o'yinchi yaqiniga qayta joylanadi
 - **Tezlik hissi**: FOV kengayishi, minimap endi zoom rejimda
 
+## Xarita va marshrut 🗺️
+
+**X** (telefonda 🗺️ tugma) — butun shahar xaritasi ochiladi: barcha yo'llar, tumanlar nomi bilan, kanal, temir yo'l, diqqatga sazovor joylar (nomli iconlar), do'konlar, militsiya, poyezd va siz.
+
+- Xaritaga **ikki marta bosing** — o'sha joyga **yo'llar bo'ylab marshrut** chiziladi (yashil), minimapda ham ko'rinadi
+- O'sha joyga **yana ikki marta bossangiz** — marshrut bekor bo'ladi
+- Manzilga yetganingizda marshrut o'zi yo'qoladi ("📍 Manzilga yetdingiz!")
+- **Missiya paytida** (yo'lovchi/quti olganda) manzilga **sariq marshrut** avtomatik chiziladi, topshirganda yo'qoladi
+- Minimap iconlari endi oq doirali badge ko'rinishida — aniq o'qiladi
+
+## 3 ta Premium Avtosalon 🏎️
+
+Trafikda **umuman uchramaydigan** 19 ta mashina — har salonda har xil (piyoda mashinaga yaqinlashib **E** — sotib olish):
+
+**LUX MOTORS** (markaz, Navoiy ko'chasi) — Mercedes-Benz & BMW: E200 (800k), S500 (1.4M), **Maybach (3M)**, G63 Gelik (2.2M), M5 (1M), M8 (1.9M), X7 (1.7M)
+
+**AUDI MARKAZI** (Yunusobod) — Audi'ning zo'rlari: A6 (600k), A8 L (1.3M), Q7 (1.5M), **RS7 (2M)**, RS Q8 (2.4M), **R8 superkar (3.5M — o'yindagi eng tez mashina!)**
+
+**VW SALON** (Chilonzor) — Volkswagen: Polo (350k — eng arzon premium), Jetta (500k), Passat (700k), Tiguan (900k), Arteon (1.2M), Touareg (1.6M)
+
+Har salon ichida aylanuvchi ko'rgazma mashinasi bor (Gelik, R8, Touareg) 😎
+
+## Mening uyim 🏠
+
+Markazda (xaritada 🏠) **shaxsiy hovli**:
+- **Garaj — 10 mashina joyi**: sotib olingan har bir mashina shu yerga qo'yiladi va **abadiy saqlanadi** (o'yinni yopib ochsangiz ham turadi)
+- **Uy — 3 xonali**: mehmonxona (divan, televizor, gilam, kreslo), uxlash xonasi (karavot, shkaf, tumba), oshxona (plita, muzlatgich, stol-stul) — eshikdan kirib bemalol yurasiz
+- **Aqlli ko'rinish**: ichkariga kirganingizda tashqi devorlar va tom avtomatik shaffof bo'ladi — hamma narsa ko'rinadi (GTA uslubi); chiqsangiz qaytib qattiq bo'ladi. Ichki devorlar past — kamerani to'smaydi
+- Ko'chadagi mashina — tekin lekin vaqtinchalik; garajdagi — sizniki, doimiy
+
+## Reyting va yulduzlar 🏆
+
+**B** tugmasi (xaritada 🏆 tugma) — reyting paneli: ball, unvon, masofa, yulduzlar, missiyalar, ishlab topilgan pul, rekord tezlik, o'yin vaqti. Hammasi **saqlanadi** (brauzer localStorage) — o'yinni yopib ochsangiz ham progress turadi.
+
+- Shahar bo'ylab **25 ta aylanuvchi oltin yulduz** yashiringan (mashhur joylar oldida va chekka burchaklarda). Ustidan o'tsangiz terib olasiz: **+25 000 so'm** har biri, hammasini tersangiz **+1 000 000 so'm**! Katta xaritada (X) sariq nuqtalar — terilmagan yulduzlar
+- Yuqori o'ngda hisoblagich: ⭐ nechta terilgani + umumiy masofa
+- **Ball** = masofa (km×15) + yulduz (×400) + missiya (×250) + pul (÷1000)
+- **Unvonlar**: Yangi kelgan → Shahar o'rganuvchisi (500) → Toshkent haydovchisi (1500) → Ko'cha ustasi (3500) → Shahar afsonasi (7000) → TOSHKENT QIROLI 👑 (15000)
+
+## Shina izlari va burnout 🏁
+
+- **Tormoz** bosganda (tezlikda) — asfaltda qora shina izi qoladi (**hamma mashinada**)
+- **Qo'l tormozi** bilan driftda ham iz + ozgina tutun
+- Joyidan **gazni to'liq bossangiz** — **burnout**: g'ildirak izi + oq tutun + chiyillash. Bu faqat **kuchli mashinalarda** (Malibu 2, Tahoe, Kia K5, Sonata, Monza, Traverse, Elantra). Matiz/Nexia/Cobalt burnout qilolmaydi 😄
+- Izlar asfaltda qoladi, eskilari asta yangilariga o'rin bo'shatadi
+
+## Harakat qoidasi 🚦
+
+O'zbekistondagidek **o'ng qo'l harakati**: har mashina o'z yo'nalishining o'ng tomonida yuradi. Har bir yo'l **ikki tomonlama** — bir tomonga ketuvchi va qaytuvchi oqim alohida lane'da (asosiy yo'llarda har tomonga 2 lane). Politsiya ham shu qoidada.
+
+## v3.1 yangiliklari
+
+- **Yoqilg'i/energiya balansi**: to'liq gazda bak ~10.5 daqiqa yetadi (tinch haydashda 20+ daqiqa); yugurish energiyasi ~90 soniyaga yetadi, musht arzonlashdi
+- **Binolar endi yo'lga chiqmaydi**: barcha joylashtirish funksiyalarida asfalt-tekshiruv (`onAsphalt`), mahalla hovli devorlari ham hisobda
+- **Temir yo'l butun shahar bo'ylab** (g'arbdan sharqqacha, z=620): shpalli yotqizma, vokzalda soyabonli 1-platforma
+- **Haqiqiy yuradigan Afrosiyob**: shahar chetidan kirib keladi, gudok chalib bekatda to'xtaydi, platformadagi odamlar chiqadi, tushuvchilar vokzalga ketadi, poyezd shahardan chiqib ketadi — keyingisi qarama-qarshi tomondan keladi. Relsda turgan mashinani uradi (shikast!). Minimapда shtrixli chiziq + yashil poyezd belgisi
+- **Bunyodkor stadioni Chilonzorga ko'chdi** (temir yo'l chizig'idan)
+- **Mashinalar endi silliq**: yumaloq burun, qavariq kapot, kamarli tom, g'ildirak arkalari, tepaga toraygan kabina (tumblehome), qiya yon oynalar
+- **Motor ovozi realistik**: 4 qatlam (asosiy + gurullash + vixlop sub-oktavasi + garmonika) + havo shovqini + yumshoq distorsiya + salda "lop-lop", vites almashganda RPM tushadi
+
 ## Fayl tuzilishi
 
 - `index.html` — UI, HUD, mobil tugmalar
@@ -105,6 +165,8 @@ Ikkalasi ham xaritada joy nomi va minimapda ko'rinadi.
 - `js/world.js` — Toshkent xaritasi (6 tuman)
 - `js/traffic.js` — svetaforlar (hisoblagich bilan), traffic AI
 - `js/peds.js` — odamlar (o'lim, qo'rqish, baqirish)
+- `js/train.js` — yuradigan poyezdlar (Afrosiyob), yo'lovchilar, kesishma xavfi
+- `js/map.js` — katta xarita (X), yo'l grafigi bo'yicha marshrut (Dijkstra), waypoint
 - `js/police.js` — militsiya (jinoyat, quvish, qo'lga olish)
 - `js/daynight.js` — kun/tun sikli, yorug'lik, chiroqlar
 - `js/damage.js` — mashina shikastlanishi (bamper tushishi, pachoq)

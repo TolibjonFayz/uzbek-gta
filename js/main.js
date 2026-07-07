@@ -59,6 +59,9 @@
   scene.add(player);
 
   G.initPeds(scene, { x: player.position.x, z: player.position.z });
+  if (G.initTrain) G.initTrain(scene);
+  if (G.initSkid) G.initSkid(scene);
+  if (G.initScore) G.initScore(scene);
 
   var state = {
     mode: 'foot',
@@ -73,7 +76,7 @@
   // ---------- JANG: musht urish ----------
   function doPunch() {
     if (menuOpen || state.mode !== 'foot' || state.punchT > 0.15) return;
-    energy = Math.max(0, energy - 4);
+    energy = Math.max(0, energy - 1.5);
     state.punchT = 0.42;
     var fdx = Math.sin(player.rotation.y), fdz = Math.cos(player.rotation.y);
     var ox = player.position.x + fdx * 0.5, oz = player.position.z + fdz * 0.5;
@@ -116,8 +119,10 @@
     el.missionToast.style.opacity = 1;
     toastTimer = 2.0;
   }
+  G.showToast = showToast; // map.js ham ishlatadi
   G.onMissionComplete = function (reward, kind) {
     showToast((kind === 'taxi' ? '🚕' : '📦') + ' +' + somStr(reward), '#5be07a');
+    if (G.scoreEvent) G.scoreEvent('mission', reward);
   };
 
   // ---------- STANSIYA (yoqilg'i / tuzatish) ----------
@@ -156,8 +161,15 @@
     keys[e.code] = true;
     if (menuOpen) { if (e.code === 'Escape' || e.code === 'KeyE') closeFoodMenu(); return; }
     if (e.code === 'Enter') tryEnterExit();
+    if (e.code === 'KeyE' && state.mode === 'foot' && G.salonBuy && G.salonBuy(player.position.x, player.position.z)) return;
     if (e.code === 'KeyE' && state.mode === 'foot' && nearShop) openFoodMenu(nearShop);
     if (e.code === 'KeyE' && state.mode === 'drive' && nearStation) doStation();
+    if (e.code === 'KeyX' && G.toggleBigMap) G.toggleBigMap();
+    if (e.code === 'KeyB' && G.toggleStats) G.toggleStats();
+    if (e.code === 'Escape') {
+      if (G.isStatsOpen && G.isStatsOpen()) G.toggleStats();
+      else if (G.isMapOpen && G.isMapOpen()) G.toggleBigMap();
+    }
     if (e.code === 'KeyV' && state.mode === 'drive') state.interiorView = !state.interiorView;
     if (e.code === 'KeyM' && state.mode === 'drive') { G.radio.next(); updateSongBar(); }
     if (e.code === 'KeyH' && state.mode === 'drive') G.sfx.horn();
@@ -345,8 +357,8 @@
       el.controlsBox.style.display = 'none';
     } else {
       el.controlsBox.innerHTML = drive
-        ? "<b>W/S</b> gaz / tormoz<br><b>A/D</b> rul<br><b>Space</b> qo'l tormozi<br><b>V</b> salon kamerasi<br><b>M</b> keyingi qo'shiq<br><b>H</b> klakson<br><b>E</b> stansiya (yoqilgi/tuzatish)<br><b>Enter</b> tushish"
-        : "<b>W/S</b> oldinga / orqaga<br><b>A/D</b> burilish<br><b>Shift</b> yugurish<br><b>Space</b> sakrash<br><b>Ctrl</b> o'tirish<br><b>F</b> musht<br><b>E</b> ovqat olish<br><b>Enter</b> mashinaga minish";
+        ? "<b>W/S</b> gaz / tormoz<br><b>A/D</b> rul<br><b>Space</b> qo'l tormozi<br><b>V</b> salon kamerasi<br><b>M</b> keyingi qo'shiq<br><b>H</b> klakson<br><b>E</b> stansiya (yoqilgi/tuzatish)<br><b>X</b> xarita · <b>B</b> reyting<br><b>Enter</b> tushish"
+        : "<b>W/S</b> oldinga / orqaga<br><b>A/D</b> burilish<br><b>Shift</b> yugurish<br><b>Space</b> sakrash<br><b>Ctrl</b> o'tirish<br><b>F</b> musht<br><b>E</b> ovqat olish<br><b>X</b> xarita · <b>B</b> reyting<br><b>Enter</b> mashinaga minish";
     }
   }
 
@@ -415,15 +427,75 @@
       mmCtx.moveTo(tx(202), 0); mmCtx.lineTo(tx(202), W);
       mmCtx.stroke();
     }
+    // temir yo'l (shtrixli chiziq)
+    if (Math.abs(620 - pz) < MM_RANGE + 20) {
+      mmCtx.strokeStyle = '#8a7a5f';
+      mmCtx.lineWidth = 3;
+      mmCtx.setLineDash([5, 4]);
+      mmCtx.beginPath();
+      mmCtx.moveTo(0, tz(620)); mmCtx.lineTo(W, tz(620));
+      mmCtx.stroke();
+      mmCtx.setLineDash([]);
+    }
+    // poyezd
+    if (G.trainPos) {
+      var tp = G.trainPos();
+      if (tp) {
+        var tdx = tp.x - px, tdz = tp.z - pz;
+        if (tdx * tdx + tdz * tdz < (MM_RANGE + 60) * (MM_RANGE + 60)) {
+          mmCtx.fillStyle = '#2ecf6a';
+          mmCtx.fillRect(tx(tp.x) - 5, tz(tp.z) - 2.5, 10, 5);
+        }
+      }
+    }
+    // marshrutlar (yo'llar bo'ylab): sariq — missiya, yashil — qo'lda qo'yilgan
+    function mmRoute(pts, color, width) {
+      if (!pts || pts.length < 2) return;
+      mmCtx.strokeStyle = color;
+      mmCtx.lineWidth = width;
+      mmCtx.lineJoin = 'round';
+      mmCtx.lineCap = 'round';
+      mmCtx.beginPath();
+      mmCtx.moveTo(tx(pts[0].x), tz(pts[0].z));
+      for (var ri = 1; ri < pts.length; ri++) mmCtx.lineTo(tx(pts[ri].x), tz(pts[ri].z));
+      mmCtx.stroke();
+    }
+    if (G.routes) {
+      mmRoute(G.routes.waypoint, 'rgba(125,240,138,0.85)', 3);
+      mmRoute(G.routes.mission, 'rgba(255,210,63,0.9)', 3.5);
+    }
     // diqqatga sazovor joylar
     G.landmarks.forEach(function (L) {
       var dx = L.x - px, dz = L.z - pz;
       if (dx * dx + dz * dz > (MM_RANGE + 40) * (MM_RANGE + 40)) return;
-      mmCtx.fillStyle = L.color;
-      mmCtx.beginPath();
-      mmCtx.arc(tx(L.x), tz(L.z), 4, 0, Math.PI * 2);
-      mmCtx.fill();
+      var mx = tx(L.x), mz = tz(L.z);
+      var icon = G.LANDMARK_ICONS[L.name];
+      if (icon && G.drawBadge) {
+        G.drawBadge(mmCtx, mx, mz, icon, L.color, 8, 11);
+      } else {
+        mmCtx.fillStyle = L.color;
+        mmCtx.beginPath();
+        mmCtx.arc(mx, mz, 4, 0, Math.PI * 2);
+        mmCtx.fill();
+      }
     });
+    // terilmagan yulduzlar (yaqin atrofda)
+    if (G.getStars) {
+      var stArr = G.getStars();
+      for (var sti = 0; sti < stArr.length; sti++) {
+        var st = stArr[sti];
+        if (st.done) continue;
+        var sdx = st.x - px, sdz = st.z - pz;
+        if (sdx * sdx + sdz * sdz > MM_RANGE * MM_RANGE) continue;
+        mmCtx.fillStyle = '#ffd23f';
+        mmCtx.beginPath();
+        mmCtx.arc(tx(st.x), tz(st.z), 3.5, 0, Math.PI * 2);
+        mmCtx.fill();
+        mmCtx.strokeStyle = 'rgba(20,14,0,0.8)';
+        mmCtx.lineWidth = 1;
+        mmCtx.stroke();
+      }
+    }
     // mashinalar (militsiya — ko'k, ko'zga tashlanadigan)
     G.allCars.forEach(function (c) {
       if (c === state.car) return;
@@ -449,6 +521,20 @@
       mmCtx.fill();
       mmCtx.strokeStyle = '#000'; mmCtx.lineWidth = 1; mmCtx.stroke();
     });
+    // qo'lda qo'yilgan manzil (waypoint) — yashil, chetga bosilib yo'nalish ko'rsatadi
+    if (G.waypoint) {
+      var wmx = (G.waypoint.x - px) * s, wmz = (G.waypoint.z - pz) * s;
+      var wd = Math.hypot(wmx, wmz);
+      var wedge = false;
+      if (wd > 68) { wmx = wmx / wd * 68; wmz = wmz / wd * 68; wedge = true; }
+      mmCtx.fillStyle = '#7df08a';
+      mmCtx.beginPath();
+      mmCtx.arc(C + wmx, C + wmz, wedge ? 3.5 : 5.5, 0, Math.PI * 2);
+      mmCtx.fill();
+      mmCtx.strokeStyle = '#0a380f';
+      mmCtx.lineWidth = 1.5;
+      mmCtx.stroke();
+    }
     // o'yinchi
     mmCtx.save();
     mmCtx.translate(C, C);
@@ -546,8 +632,8 @@
     // energiya: yugurganda kamayadi, aks holda tiklanadi
     var canRun = wantRun() && energy > 5 && !menuOpen;
     var running = canRun && Math.abs(ax.fwd) > 0.05 && !state.crouch;
-    if (running) energy = Math.max(0, energy - 5 * dt);
-    else energy = Math.min(100, energy + 1.6 * dt);
+    if (running) energy = Math.max(0, energy - 1.1 * dt); // ~90 soniya uzluksiz yugurish
+    else energy = Math.min(100, energy + 2.0 * dt);
     var spd = state.crouch ? 1.3 : (canRun ? 6.2 : 3.0);
     var mv = ax.fwd * spd * dt;
     var nx = player.position.x + Math.sin(player.rotation.y) * mv;
@@ -635,7 +721,13 @@
     if (G.IS_TOUCH) document.getElementById('mbFood').style.display = nearShop ? 'flex' : 'none';
 
     var near = nearestCar(5.5);
-    if (near) {
+    var sOffer = G.salonOffer ? G.salonOffer(player.position.x, player.position.z) : null;
+    if (sOffer) {
+      el.hint.innerHTML = sOffer.owned
+        ? '✅ ' + sOffer.name + ' sizda bor — yon turargohda'
+        : '<b>E</b> — ' + sOffer.name + ' sotib olish (' + somStr(sOffer.price) + ')';
+      el.hint.style.display = 'block';
+    } else if (near) {
       el.hint.innerHTML = '<b>Enter</b> — ' + near.name + 'ga minish' + (G.IS_TOUCH ? ' (🚗 tugma)' : '');
       el.hint.style.display = 'block';
     } else if (nearShop) {
@@ -656,7 +748,8 @@
 
     // yoqilg'i sarfi
     if (Math.abs(car.speed) > 0.3 || ax.fwd > 0.05) {
-      car.fuel = Math.max(0, car.fuel - (0.32 + Math.abs(ax.fwd) * 0.85) * dt);
+      // to'liq gazda ~10.5 daqiqa, tinch haydashda ~20+ daqiqa yetadi
+      car.fuel = Math.max(0, car.fuel - (0.05 + Math.abs(ax.fwd) * 0.11) * dt);
     }
     var outOfFuel = car.fuel <= 0;
 
@@ -687,8 +780,12 @@
       }
     }
 
-    // shina chiyillashi
-    if (hb && Math.abs(car.speed) > 8) G.sfx.screechStart();
+    // shina izlari + tutun (burnout — faqat kuchli mashinalarda)
+    var burnout = G.carSkid ? G.carSkid(dt, car, ax.fwd, hb) : false;
+
+    // shina chiyillashi (qo'l tormozi, keskin tormoz yoki burnout)
+    var hardBrake = ax.fwd < -0.05 && car.speed > 12;
+    if ((hb && Math.abs(car.speed) > 8) || hardBrake || burnout) G.sfx.screechStart();
     else G.sfx.screechStop();
 
     car.x += Math.cos(car.heading) * car.speed * dt;
@@ -792,6 +889,7 @@
     G.trafficSignals.update(dt, px, pz);
     G.updateTraffic(dt, px, pz);
     G.updatePolice(dt, px, pz, state.mode === 'foot', state.car);
+    if (G.updateTrain) G.updateTrain(dt, px, pz, state.mode === 'drive' ? state.car : null, player);
 
     if (state.mode === 'foot') updateFoot(dt);
     else updateDrive(dt);
@@ -801,6 +899,12 @@
 
     // shikast (bamper tushishi + pachoq) — tushgan bamperlar gravitatsiyasi
     G.updateDamage(dt, px, pz);
+
+    // tutun zarralari animatsiyasi (piyoda bo'lganda ham so'nib tugashi uchun)
+    if (G.updateSkidFx) G.updateSkidFx(dt);
+
+    // uy ichida — tashqi devorlar/tom shaffoflashadi
+    if (G.updateHouse) G.updateHouse(dt, px, pz);
 
     // missiyalar (taksi / yetkazish) + pul + energiya HUD
     G.updateMissions(dt, state.mode, px, pz);
@@ -840,7 +944,10 @@
     for (var a = 0; a < G.animated.length; a++) G.animated[a].fn(dt);
 
     updateLocName(px, pz, dt);
+    if (G.updateScore) G.updateScore(dt, px, pz, state.mode === 'drive', state.mode === 'drive' ? Math.abs(state.car.speed) : 0);
+    if (G.updateMapRoutes) G.updateMapRoutes(dt, px, pz);
     drawMinimap(px, pz, ph);
+    if (G.isMapOpen && G.isMapOpen()) G.drawBigMap(px, pz, ph);
 
     // kun/tun — vaqt o'tishi, yorug'lik, osmon ('T' yoki ⏩ — tez o'tkazish)
     G.dayNight.update(dt, keys['KeyT'] || mobile.fastTime);

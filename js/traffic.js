@@ -120,21 +120,26 @@ window.G = window.G || {};
 
   var trafficCars = [];
 
+  // O'zbekiston — O'NG QO'L harakati: har mashina o'z yurish yo'nalishining o'ng tomonida.
+  // vertikal yo'l (z bo'ylab): o'ng lane  x = pos - dir*off
+  // gorizontal yo'l (x bo'ylab): o'ng lane z = pos + dir*off
   function laneOffsets(road) {
-    if (road.main) return [4, 9.8];
+    if (road.main) return [4, 9.8];   // ikki lane har tomonga
     if (road.ring) return [3.5, 7.5];
-    return [4.2];
+    return [4.2];                     // bitta lane har tomonga (ikki tomonlama)
   }
+  function laneX(road, dir, off) { return road.pos - dir * off; }
+  function laneZ(road, dir, off) { return road.pos + dir * off; }
 
   function spawnTrafficCar(scene, road, dir, along, laneOff) {
     var name = G.pick(G.CAR_NAMES);
     var x, z, heading;
     if (road.vertical) {
-      x = road.pos + dir * laneOff;
+      x = laneX(road, dir, laneOff);
       z = along;
       heading = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
     } else {
-      z = road.pos - dir * laneOff;
+      z = laneZ(road, dir, laneOff);
       x = along;
       heading = dir > 0 ? 0 : Math.PI;
     }
@@ -156,7 +161,9 @@ window.G = window.G || {};
     for (var i = 0; i < count; i++) {
       var road = roads[i % roads.length];
       var offs = laneOffsets(road);
-      var dir = i % 2 === 0 ? 1 : -1;
+      // har yo'lni ikki tomonlama qilamiz: har to'liq o'tishda yo'nalish almashadi
+      // (yo'llar soni juft bo'lgani uchun i%2 bir yo'lga faqat bitta yo'nalish berardi)
+      var dir = (Math.floor(i / roads.length) % 2 === 0) ? 1 : -1;
       var along = G.rand(-G.MAP + 80, G.MAP - 80);
       spawnTrafficCar(scene, road, dir, along, G.pick(offs));
     }
@@ -182,8 +189,8 @@ window.G = window.G || {};
       var dir = Math.random() < 0.5 ? 1 : -1;
       var laneOff = G.pick(laneOffsets(road));
       var nx, nz;
-      if (road.vertical) { nx = road.pos + dir * laneOff; nz = along; }
-      else { nz = road.pos - dir * laneOff; nx = along; }
+      if (road.vertical) { nx = laneX(road, dir, laneOff); nz = along; }
+      else { nz = laneZ(road, dir, laneOff); nx = along; }
       // boshqa mashinaga juda yaqin bo'lmasin
       var ok = true;
       for (var j = 0; j < G.allCars.length; j++) {
@@ -271,13 +278,11 @@ window.G = window.G || {};
       // harakat
       if (road.vertical) {
         car.z += car.dir * car.speed * dt;
-        var laneX = road.pos + car.dir * car.laneOff;
-        car.x = G.lerp(car.x, laneX, Math.min(1, 2 * dt));
+        car.x = G.lerp(car.x, laneX(road, car.dir, car.laneOff), Math.min(1, 2 * dt));
         if (Math.abs(car.z) > G.MAP - 40) recycle(car, px, pz);
       } else {
         car.x += car.dir * car.speed * dt;
-        var laneZ = road.pos - car.dir * car.laneOff;
-        car.z = G.lerp(car.z, laneZ, Math.min(1, 2 * dt));
+        car.z = G.lerp(car.z, laneZ(road, car.dir, car.laneOff), Math.min(1, 2 * dt));
         if (Math.abs(car.x) > G.MAP - 40) recycle(car, px, pz);
       }
       G.updateCarMesh(car);

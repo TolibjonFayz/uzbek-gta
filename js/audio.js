@@ -236,38 +236,103 @@ window.G = window.G || {};
     return f.replace(/\.[a-z0-9]+$/i, '').replace(/[_\-]+/g, ' ').trim();
   }
 
-  // ---------- MOTOR OVOZI ----------
-  var engine = { osc: null, gain: null, filter: null };
+  // ---------- MOTOR OVOZI (qatlamli, realistik) ----------
+  // asosiy sawtooth + detune juft (gurullash) + sub-oktava (vixlop) + yuqori garmonika
+  // + havo/yo'l shovqini + yumshoq distorsiya + salda "lop-lop" tebranish
+  var engine = { on: false };
   G.engineSound = {
     start: function () {
       ensureCtx();
-      if (engine.osc) return;
-      engine.osc = ctx.createOscillator();
-      engine.osc.type = 'sawtooth';
-      engine.osc.frequency.value = 55;
-      engine.filter = ctx.createBiquadFilter();
-      engine.filter.type = 'lowpass';
-      engine.filter.frequency.value = 320;
-      engine.gain = ctx.createGain();
-      engine.gain.gain.value = 0;
-      engine.osc.connect(engine.filter);
-      engine.filter.connect(engine.gain);
-      engine.gain.connect(master);
-      engine.osc.start();
+      if (engine.on) return;
+      engine.on = true;
+
+      // yumshoq tanh distorsiya — sinuslarni "temir" ovozga aylantiradi
+      var curve = new Float32Array(256);
+      for (var i = 0; i < 256; i++) {
+        var x = i / 128 - 1;
+        curve[i] = Math.tanh(2.2 * x);
+      }
+      var shaper = ctx.createWaveShaper();
+      shaper.curve = curve;
+      var lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 300; lp.Q.value = 0.8;
+      var gain = ctx.createGain();
+      gain.gain.value = 0;
+      shaper.connect(lp); lp.connect(gain); gain.connect(master);
+
+      function mkOsc(type, f, g0, det) {
+        var o = ctx.createOscillator();
+        o.type = type; o.frequency.value = f;
+        if (det) o.detune.value = det;
+        var g = ctx.createGain(); g.gain.value = g0;
+        o.connect(g); g.connect(shaper);
+        o.start();
+        return { o: o, g: g };
+      }
+      engine.a = mkOsc('sawtooth', 60, 0.5);          // asosiy otashlanish toni
+      engine.b = mkOsc('sawtooth', 60, 0.35, 9);      // detune juft — gurullash
+      engine.sub = mkOsc('square', 30, 0.5);          // sub-oktava — vixlop bosimi
+      engine.hi = mkOsc('sawtooth', 121, 0.16);       // yuqori garmonika — mexanika
+
+      // havo kirishi / yo'l shovqini
+      var nb = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      var nd = nb.getChannelData(0);
+      for (var j = 0; j < nd.length; j++) nd[j] = Math.random() * 2 - 1;
+      var ns = ctx.createBufferSource();
+      ns.buffer = nb; ns.loop = true;
+      var nf = ctx.createBiquadFilter();
+      nf.type = 'bandpass'; nf.frequency.value = 900; nf.Q.value = 0.6;
+      var ng = ctx.createGain(); ng.gain.value = 0;
+      ns.connect(nf); nf.connect(ng); ng.connect(master);
+      ns.start();
+
+      // salda notekis ishlash (idle wobble)
+      var lfo = ctx.createOscillator();
+      lfo.type = 'sine'; lfo.frequency.value = 11;
+      var lfoG = ctx.createGain(); lfoG.gain.value = 0.008;
+      lfo.connect(lfoG); lfoG.connect(gain.gain);
+      lfo.start();
+
+      engine.gain = gain; engine.lp = lp; engine.shaper = shaper;
+      engine.noiseSrc = ns; engine.noiseF = nf; engine.noiseG = ng;
+      engine.lfo = lfo; engine.lfoG = lfoG;
     },
     update: function (speedRatio, throttle) {
-      if (!engine.osc) return;
-      // "vites" effekti — tezlik oshgani sari ayanish qaytadan ko'tariladi
-      var gear = (speedRatio * 3.2) % 1;
-      engine.osc.frequency.setTargetAtTime(48 + gear * 90 + speedRatio * 70 + throttle * 22, ctx.currentTime, 0.08);
-      engine.gain.gain.setTargetAtTime(0.018 + speedRatio * 0.04 + throttle * 0.022, ctx.currentTime, 0.1);
+      if (!engine.on) return;
+      var t = ctx.currentTime;
+      // vites qutisi: har vitesda RPM ko'tarilib, keyingisiga o'tganda tushadi
+      var frac = (speedRatio * 3.4) % 1;
+      var rpm = 850 + frac * 2900 + throttle * 500;   // 850..~4250 rpm
+      var f = rpm / 30;                                // 4 silindr otashlanish chastotasi
+      engine.a.o.frequency.setTargetAtTime(f, t, 0.06);
+      engine.b.o.frequency.setTargetAtTime(f * 1.003, t, 0.06);
+      engine.sub.o.frequency.setTargetAtTime(f / 2, t, 0.06);
+      engine.hi.o.frequency.setTargetAtTime(f * 2.02, t, 0.06);
+      engine.lp.frequency.setTargetAtTime(240 + speedRatio * 800 + throttle * 700, t, 0.09);
+      engine.gain.gain.setTargetAtTime(0.020 + speedRatio * 0.045 + throttle * 0.028, t, 0.1);
+      engine.noiseG.gain.setTargetAtTime(0.003 + speedRatio * 0.016 + throttle * 0.008, t, 0.12);
+      engine.noiseF.frequency.setTargetAtTime(600 + speedRatio * 1600, t, 0.1);
+      engine.lfoG.gain.setTargetAtTime(Math.max(0, 0.010 - speedRatio * 0.03), t, 0.2);
     },
     stop: function () {
-      if (!engine.osc) return;
-      var o = engine.osc, g = engine.gain;
-      g.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
-      setTimeout(function () { try { o.stop(); o.disconnect(); g.disconnect(); } catch (e) {} }, 400);
-      engine.osc = null; engine.gain = null; engine.filter = null;
+      if (!engine.on) return;
+      engine.on = false;
+      var t = ctx.currentTime;
+      engine.gain.gain.setTargetAtTime(0, t, 0.08);
+      engine.noiseG.gain.setTargetAtTime(0, t, 0.08);
+      engine.lfoG.gain.setTargetAtTime(0, t, 0.05);
+      var parts = [engine.a, engine.b, engine.sub, engine.hi];
+      var ns = engine.noiseSrc, lfo = engine.lfo;
+      var gg = engine.gain, ngg = engine.noiseG, lg = engine.lfoG, sh = engine.shaper, lpf = engine.lp;
+      setTimeout(function () {
+        try {
+          parts.forEach(function (p) { p.o.stop(); p.o.disconnect(); p.g.disconnect(); });
+          ns.stop(); ns.disconnect();
+          lfo.stop(); lfo.disconnect(); lg.disconnect();
+          gg.disconnect(); ngg.disconnect(); sh.disconnect(); lpf.disconnect();
+        } catch (e) {}
+      }, 450);
+      engine.a = engine.b = engine.sub = engine.hi = null;
     }
   };
 
@@ -297,6 +362,41 @@ window.G = window.G || {};
         g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
         o.connect(g); g.connect(master);
         o.start(t); o.stop(t + 0.4);
+      });
+    },
+    // yulduz terilganda jarang (arpedjio)
+    ding: function () {
+      ensureCtx();
+      var t = ctx.currentTime;
+      [880, 1174.7, 1568].forEach(function (f, i) {
+        var o = ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.value = f;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t + i * 0.07);
+        g.gain.linearRampToValueAtTime(0.12, t + i * 0.07 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.5);
+        o.connect(g); g.connect(master);
+        o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.6);
+      });
+    },
+    // poyezd gudogi — ikki tonli havo signali
+    trainHorn: function () {
+      ensureCtx();
+      var t = ctx.currentTime;
+      [311, 392].forEach(function (f) {
+        var o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.value = f;
+        var fl = ctx.createBiquadFilter();
+        fl.type = 'lowpass'; fl.frequency.value = 900;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.065, t + 0.06);
+        g.gain.setValueAtTime(0.065, t + 0.9);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 1.25);
+        o.connect(fl); fl.connect(g); g.connect(master);
+        o.start(t); o.stop(t + 1.3);
       });
     },
     // avariya — kuchiga qarab

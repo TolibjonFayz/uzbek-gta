@@ -89,6 +89,125 @@ window.G = window.G || {};
       wsB: 0.38, roofF: 0.08, roofR: -0.30, rwB: -0.86, tailH: 0.90,
       wheelR: 0.32, type: 'sedan', accel: 10.5, maxSpeed: 60, ohF: 0.90, ohR: 1.00,
       colors: ['#f4f6f5', '#1b1b1d', '#b8bcc0', '#26415c']
+    },
+    // ===== PREMIUM (faqat avtosalonlarda sotiladi, trafikda uchramaydi) =====
+    // --- Mercedes-Benz ---
+    'Mercedes E200': {
+      len: 4.94, wid: 1.85, roofH: 1.46, cl: 0.25, noseH: 0.60, hoodH: 0.90,
+      wsB: 0.37, roofF: 0.07, roofR: -0.30, rwB: -0.86, tailH: 0.92,
+      wheelR: 0.32, type: 'sedan', accel: 11.5, maxSpeed: 63, ohF: 0.90, ohR: 1.00,
+      premium: true, colors: ['#0c0e10', '#b8bcc0', '#f4f6f5', '#26415c']
+    },
+    'Mercedes S500': {
+      len: 5.29, wid: 1.92, roofH: 1.50, cl: 0.26, noseH: 0.62, hoodH: 0.93,
+      wsB: 0.36, roofF: 0.08, roofR: -0.28, rwB: -0.86, tailH: 0.94,
+      wheelR: 0.33, type: 'sedan', accel: 12.5, maxSpeed: 68, ohF: 0.95, ohR: 1.05,
+      premium: true, colors: ['#0c0e10', '#b8bcc0', '#f4f6f5']
+    },
+    'Mercedes Maybach': {
+      len: 5.47, wid: 1.92, roofH: 1.52, cl: 0.27, noseH: 0.64, hoodH: 0.95,
+      wsB: 0.35, roofF: 0.06, roofR: -0.26, rwB: -0.84, tailH: 0.96,
+      wheelR: 0.33, type: 'sedan', accel: 12.5, maxSpeed: 70, ohF: 0.98, ohR: 1.10,
+      premium: true, colors: ['#0c0e10', '#1a2028', '#f4f6f5']
+    },
+    'Mercedes G63': {
+      len: 4.87, wid: 1.98, roofH: 1.97, cl: 0.36, noseH: 1.05, hoodH: 1.30,
+      wsB: 0.45, roofF: 0.22, roofR: -0.80, rwB: -0.95, tailH: 1.70,
+      wheelR: 0.40, type: 'suv', accel: 13, maxSpeed: 64, ohF: 0.85, ohR: 0.90,
+      premium: true, colors: ['#14161a', '#0c0e10', '#f4f6f5']
+    },
+    // --- BMW ---
+    'BMW M5': {
+      len: 4.98, wid: 1.90, roofH: 1.47, cl: 0.24, noseH: 0.58, hoodH: 0.90,
+      wsB: 0.38, roofF: 0.10, roofR: -0.30, rwB: -0.88, tailH: 0.90,
+      wheelR: 0.33, type: 'sedan', accel: 14, maxSpeed: 70, ohF: 0.92, ohR: 1.02,
+      premium: true, colors: ['#1a2536', '#0c0e10', '#f4f6f5', '#3d6ea5']
+    },
+    'BMW M8': {
+      len: 4.87, wid: 1.90, roofH: 1.35, cl: 0.22, noseH: 0.55, hoodH: 0.84,
+      wsB: 0.36, roofF: 0.02, roofR: -0.40, rwB: -0.78, tailH: 0.88,
+      wheelR: 0.33, type: 'sedan', accel: 15, maxSpeed: 72, ohF: 0.88, ohR: 0.98,
+      premium: true, colors: ['#0c0e10', '#3d6ea5', '#f4f6f5', '#7a1f28']
+    },
+    'BMW X7': {
+      len: 5.15, wid: 2.00, roofH: 1.80, cl: 0.32, noseH: 0.98, hoodH: 1.18,
+      wsB: 0.40, roofF: 0.14, roofR: -0.74, rwB: -0.94, tailH: 1.50,
+      wheelR: 0.38, type: 'suv', accel: 12, maxSpeed: 64, ohF: 0.95, ohR: 1.05,
+      premium: true, colors: ['#0c0e10', '#f4f6f5', '#3d4a58']
+    },
+    // --- Audi ---
+    'Audi A6': {
+      len: 4.94, wid: 1.89, roofH: 1.46, cl: 0.25, noseH: 0.60, hoodH: 0.90,
+      wsB: 0.37, roofF: 0.07, roofR: -0.32, rwB: -0.85, tailH: 0.92,
+      wheelR: 0.32, type: 'sedan', accel: 12, maxSpeed: 62, ohF: 0.90, ohR: 1.00,
+      premium: true, colors: ['#0c0e10', '#f4f6f5', '#b8bcc0', '#26415c']
+    },
+    'Audi A8 L': {
+      len: 5.30, wid: 1.94, roofH: 1.49, cl: 0.26, noseH: 0.61, hoodH: 0.92,
+      wsB: 0.36, roofF: 0.07, roofR: -0.28, rwB: -0.85, tailH: 0.93,
+      wheelR: 0.33, type: 'sedan', accel: 12.5, maxSpeed: 67, ohF: 0.95, ohR: 1.05,
+      premium: true, colors: ['#0c0e10', '#1a2028', '#b8bcc0']
+    },
+    'Audi Q7': {
+      len: 5.06, wid: 1.97, roofH: 1.74, cl: 0.30, noseH: 0.95, hoodH: 1.14,
+      wsB: 0.40, roofF: 0.12, roofR: -0.72, rwB: -0.93, tailH: 1.44,
+      wheelR: 0.37, type: 'suv', accel: 12, maxSpeed: 63, ohF: 0.94, ohR: 1.02,
+      premium: true, colors: ['#f4f6f5', '#0c0e10', '#4a5568']
+    },
+    'Audi RS7': {
+      len: 5.01, wid: 1.95, roofH: 1.42, cl: 0.22, noseH: 0.54, hoodH: 0.85,
+      wsB: 0.36, roofF: 0.00, roofR: -0.42, rwB: -0.80, tailH: 0.90,
+      wheelR: 0.34, type: 'sedan', accel: 15, maxSpeed: 74, ohF: 0.90, ohR: 1.00,
+      premium: true, colors: ['#3d4045', '#0c0e10', '#7a1f28', '#f4f6f5']
+    },
+    'Audi RS Q8': {
+      len: 5.01, wid: 2.00, roofH: 1.69, cl: 0.28, noseH: 0.92, hoodH: 1.12,
+      wsB: 0.40, roofF: 0.08, roofR: -0.60, rwB: -0.90, tailH: 1.34,
+      wheelR: 0.38, type: 'suv', accel: 14, maxSpeed: 70, ohF: 0.92, ohR: 1.00,
+      premium: true, colors: ['#0c0e10', '#14324f', '#f4f6f5']
+    },
+    'Audi R8': {
+      len: 4.43, wid: 1.94, roofH: 1.24, cl: 0.20, noseH: 0.48, hoodH: 0.70,
+      wsB: 0.30, roofF: -0.05, roofR: -0.45, rwB: -0.75, tailH: 0.95,
+      wheelR: 0.33, type: 'sedan', accel: 16, maxSpeed: 78, ohF: 0.75, ohR: 0.85,
+      premium: true, colors: ['#c23b2e', '#0c0e10', '#f4f6f5', '#3d4045']
+    },
+    // --- Volkswagen ---
+    'VW Polo': {
+      len: 4.05, wid: 1.75, roofH: 1.46, cl: 0.25, noseH: 0.62, hoodH: 0.90,
+      wsB: 0.40, roofF: 0.08, roofR: -0.54, rwB: -0.90, tailH: 1.14,
+      wheelR: 0.29, type: 'hatch', accel: 9, maxSpeed: 52, ohF: 0.78, ohR: 0.82,
+      premium: true, colors: ['#f4f6f5', '#c23b2e', '#3d6ea5', '#0c0e10']
+    },
+    'VW Jetta': {
+      len: 4.70, wid: 1.80, roofH: 1.45, cl: 0.25, noseH: 0.60, hoodH: 0.89,
+      wsB: 0.37, roofF: 0.06, roofR: -0.34, rwB: -0.85, tailH: 0.91,
+      wheelR: 0.31, type: 'sedan', accel: 10, maxSpeed: 56, ohF: 0.88, ohR: 0.98,
+      premium: true, colors: ['#f4f6f5', '#b8bcc0', '#26415c', '#0c0e10']
+    },
+    'VW Passat': {
+      len: 4.87, wid: 1.83, roofH: 1.46, cl: 0.25, noseH: 0.60, hoodH: 0.90,
+      wsB: 0.37, roofF: 0.06, roofR: -0.32, rwB: -0.86, tailH: 0.92,
+      wheelR: 0.32, type: 'sedan', accel: 10.5, maxSpeed: 60, ohF: 0.90, ohR: 1.00,
+      premium: true, colors: ['#0c0e10', '#f4f6f5', '#b8bcc0', '#3d4a58']
+    },
+    'VW Arteon': {
+      len: 4.86, wid: 1.87, roofH: 1.42, cl: 0.23, noseH: 0.56, hoodH: 0.86,
+      wsB: 0.36, roofF: 0.02, roofR: -0.42, rwB: -0.80, tailH: 0.89,
+      wheelR: 0.33, type: 'sedan', accel: 12, maxSpeed: 64, ohF: 0.88, ohR: 0.98,
+      premium: true, colors: ['#7a1f28', '#0c0e10', '#f4f6f5', '#b8bcc0']
+    },
+    'VW Tiguan': {
+      len: 4.51, wid: 1.84, roofH: 1.67, cl: 0.29, noseH: 0.90, hoodH: 1.10,
+      wsB: 0.41, roofF: 0.10, roofR: -0.66, rwB: -0.92, tailH: 1.36,
+      wheelR: 0.35, type: 'suv', accel: 10, maxSpeed: 56, ohF: 0.84, ohR: 0.90,
+      premium: true, colors: ['#f4f6f5', '#3d6ea5', '#0c0e10', '#b8bcc0']
+    },
+    'VW Touareg': {
+      len: 4.88, wid: 1.98, roofH: 1.72, cl: 0.30, noseH: 0.94, hoodH: 1.14,
+      wsB: 0.40, roofF: 0.10, roofR: -0.70, rwB: -0.93, tailH: 1.42,
+      wheelR: 0.37, type: 'suv', accel: 12, maxSpeed: 63, ohF: 0.92, ohR: 1.00,
+      premium: true, colors: ['#0c0e10', '#4a5568', '#f4f6f5']
     }
   };
 
@@ -100,7 +219,16 @@ window.G = window.G || {};
     'Monza': ['Chevrolet', 'sedan'], 'Malibu 2': ['Chevrolet', 'sedan'],
     'Traverse': ['Chevrolet', 'SUV'], 'Tahoe': ['Chevrolet', 'SUV'],
     'Kia K5': ['Kia', 'sedan'], 'Kia Sonet': ['Kia', 'krossover'],
-    'Hyundai Elantra': ['Hyundai', 'sedan'], 'Hyundai Sonata': ['Hyundai', 'sedan']
+    'Hyundai Elantra': ['Hyundai', 'sedan'], 'Hyundai Sonata': ['Hyundai', 'sedan'],
+    'Mercedes E200': ['Mercedes-Benz', 'biznes sedan'], 'Mercedes S500': ['Mercedes-Benz', 'lyuks sedan'],
+    'Mercedes Maybach': ['Mercedes-Maybach', 'flagman lyuks'], 'Mercedes G63': ['Mercedes-Benz', 'SUV (Gelik)'],
+    'BMW M5': ['BMW', 'sport sedan'], 'BMW M8': ['BMW', 'sport kupe'], 'BMW X7': ['BMW', 'katta SUV'],
+    'Audi A6': ['Audi', 'premium sedan'], 'Audi A8 L': ['Audi', 'flagman sedan'],
+    'Audi Q7': ['Audi', 'SUV'], 'Audi RS7': ['Audi', 'super sedan'],
+    'Audi RS Q8': ['Audi', 'sport SUV'], 'Audi R8': ['Audi', 'superkar'],
+    'VW Polo': ['Volkswagen', 'xetchbek'], 'VW Jetta': ['Volkswagen', 'sedan'],
+    'VW Passat': ['Volkswagen', 'sedan'], 'VW Arteon': ['Volkswagen', 'fastbek'],
+    'VW Tiguan': ['Volkswagen', 'krossover'], 'VW Touareg': ['Volkswagen', 'SUV']
   };
   Object.keys(META).forEach(function (n) {
     SPECS[n].brand = META[n][0];
@@ -113,26 +241,53 @@ window.G = window.G || {};
     if (bodyGeoCache[name]) return bodyGeoCache[name];
     var s = SPECS[name];
     var L2 = s.len / 2;
-    var sh = new THREE.Shape();
-    // pastdan old tomondan boshlab, soat miliga teskari
-    sh.moveTo(L2 - 0.02, s.cl + 0.05);
-    sh.lineTo(L2, s.noseH * 0.55 + s.cl * 0.45);      // bamper
-    sh.lineTo(L2 - 0.04, s.noseH);                     // old panel tepasi (fara chizig'i)
-    sh.lineTo(s.wsB * L2, s.hoodH);                    // kapot -> old oyna asosi
-    sh.lineTo(s.roofF * L2, s.roofH);                  // old oyna -> tom
-    sh.lineTo(s.roofR * L2, s.roofH);                  // tom
-    sh.lineTo(s.rwB * L2, s.tailH);                    // orqa oyna -> bagaj
-    sh.lineTo(-L2 + 0.02, s.tailH - 0.02);             // bagaj / orqa eshik
-    sh.lineTo(-L2, s.noseH * 0.5 + s.cl * 0.5);        // orqa bamper
-    sh.lineTo(-L2 + 0.03, s.cl + 0.05);
-    sh.lineTo(L2 - 0.02, s.cl + 0.05);
+    var bod = s.cl + 0.05;
+    var wxF = L2 - s.ohF, wxR = -(L2 - s.ohR);
+    // g'ildirak arkasi radiusi — g'ildirak to'liq sig'sin
+    var ar = Math.max(s.wheelR + 0.10, 2 * s.wheelR + 0.08 - bod);
 
-    var depth = s.wid - 0.16;
+    var sh = new THREE.Shape();
+    sh.moveTo(L2 - 0.02, bod);
+    // yumaloq old bamper-burun
+    sh.quadraticCurveTo(L2 + 0.10, (bod + s.noseH) / 2, L2 - 0.02, s.noseH);
+    // qavariq kapot
+    sh.quadraticCurveTo((L2 + s.wsB * L2) / 2, s.hoodH + 0.015, s.wsB * L2, s.hoodH);
+    // old oyna qiyaligi
+    sh.lineTo(s.roofF * L2, s.roofH);
+    // kamarli tom
+    sh.quadraticCurveTo((s.roofF + s.roofR) / 2 * L2, s.roofH + 0.05, s.roofR * L2, s.roofH);
+    // orqa oyna -> bagaj (silliq)
+    sh.quadraticCurveTo((s.roofR + s.rwB) / 2 * L2, (s.roofH + s.tailH) / 2 + 0.04, s.rwB * L2, s.tailH);
+    sh.lineTo(-L2 + 0.10, s.tailH - 0.01);
+    // yumaloq orqa
+    sh.quadraticCurveTo(-L2 - 0.06, (s.tailH + bod) / 2, -L2 + 0.06, bod);
+    // pastki chiziq + g'ildirak arkalari
+    sh.lineTo(wxR - ar, bod);
+    sh.absarc(wxR, bod, ar, Math.PI, 0, true);
+    sh.lineTo(wxF - ar, bod);
+    sh.absarc(wxF, bod, ar, Math.PI, 0, true);
+    sh.lineTo(L2 - 0.02, bod);
+
+    var depth = s.wid - 0.20;
     var geo = new THREE.ExtrudeGeometry(sh, {
-      depth: depth, steps: 1,
-      bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.055, bevelSegments: 2
+      depth: depth, steps: 1, curveSegments: 10,
+      bevelEnabled: true, bevelThickness: 0.09, bevelSize: 0.08, bevelSegments: 3
     });
     geo.translate(0, 0, -depth / 2);
+
+    // tumblehome — bel chizig'idan tepada kuzov ichkariga torayadi
+    var belt = s.hoodH + 0.04;
+    var span = Math.max(0.3, s.roofH - belt);
+    var taper = s.type === 'van' ? 0.07 : 0.16;
+    var pos = geo.attributes.position;
+    for (var i = 0; i < pos.count; i++) {
+      var y = pos.getY(i);
+      if (y > belt) {
+        var f = 1 - taper * Math.min(1, (y - belt) / span);
+        pos.setZ(i, pos.getZ(i) * f);
+      }
+    }
+    geo.computeVertexNormals();
     bodyGeoCache[name] = geo;
     return geo;
   }
@@ -144,14 +299,26 @@ window.G = window.G || {};
     var s = SPECS[name];
     var L2 = s.len / 2;
     var belt = s.hoodH + 0.02;
-    var top = s.roofH - 0.06;
+    var top = s.roofH - 0.05;
     var sh = new THREE.Shape();
-    sh.moveTo(s.wsB * L2 - 0.10, belt);
-    sh.lineTo(s.roofF * L2 - 0.04, top);
-    sh.lineTo(s.roofR * L2 + 0.04, top);
-    sh.lineTo(s.rwB * L2 + 0.10, Math.min(belt, s.tailH + 0.02));
-    sh.lineTo(s.wsB * L2 - 0.10, belt);
-    var geo = new THREE.ShapeGeometry(sh);
+    sh.moveTo(s.wsB * L2 - 0.08, belt);
+    sh.lineTo(s.roofF * L2 - 0.02, top);
+    sh.quadraticCurveTo((s.roofF + s.roofR) / 2 * L2, top + 0.04, s.roofR * L2 + 0.02, top);
+    sh.lineTo(s.rwB * L2 + 0.08, Math.min(belt, s.tailH + 0.02));
+    sh.lineTo(s.wsB * L2 - 0.08, belt);
+    var geo = new THREE.ShapeGeometry(sh, 6);
+    // oynani kuzov toraytirilishiga (tumblehome) mos qiyalatamiz — z geometriyaga yoziladi
+    var zOut = s.wid / 2 - 0.005;
+    var beltW = s.hoodH + 0.04;
+    var spanW = Math.max(0.3, s.roofH - beltW);
+    var taper = s.type === 'van' ? 0.07 : 0.16;
+    var pos = geo.attributes.position;
+    for (var i = 0; i < pos.count; i++) {
+      var y = pos.getY(i);
+      var f = y > beltW ? 1 - taper * Math.min(1, (y - beltW) / spanW) : 1;
+      pos.setZ(i, zOut * f);
+    }
+    geo.computeVertexNormals();
     glassGeoCache[name] = geo;
     return geo;
   }
@@ -189,27 +356,26 @@ window.G = window.G || {};
     body.castShadow = true;
     root.add(body);
 
-    // yon oynalar
+    // yon oynalar (qiyaligi geometriyada, ikki tomon — ko'zgu aks)
+    glass.side = THREE.DoubleSide;
     var sgGeo = sideGlassGeometry(name);
     var sg1 = new THREE.Mesh(sgGeo, glass);
-    sg1.position.z = W / 2 + 0.005;
     root.add(sg1);
     var sg2 = new THREE.Mesh(sgGeo, glass);
-    sg2.position.z = -W / 2 - 0.005;
-    sg2.rotation.y = Math.PI;
+    sg2.scale.z = -1;
     root.add(sg2);
 
     // old oyna (qiya tekislik)
     var wsX1 = s.wsB * L2, wsX2 = s.roofF * L2;
     var wsLen = Math.hypot(wsX1 - wsX2, s.roofH - s.hoodH) - 0.04;
-    var ws = G.box(0.04, wsLen, W * 0.86, glass);
+    var ws = G.box(0.04, wsLen, W * 0.78, glass);
     ws.position.set((wsX1 + wsX2) / 2 + 0.03, (s.hoodH + s.roofH) / 2 + 0.02, 0);
     ws.rotation.z = Math.atan2(wsX1 - wsX2, s.roofH - s.hoodH);
     root.add(ws);
     // orqa oyna
     var rwX1 = s.roofR * L2, rwX2 = s.rwB * L2;
     var rwLen = Math.hypot(rwX1 - rwX2, s.roofH - s.tailH) - 0.04;
-    var rw = G.box(0.04, rwLen, W * 0.84, glass);
+    var rw = G.box(0.04, rwLen, W * 0.76, glass);
     rw.position.set((rwX1 + rwX2) / 2 - 0.03, (s.tailH + s.roofH) / 2 + 0.02, 0);
     rw.rotation.z = -Math.atan2(rwX2 - rwX1, s.tailH - s.roofH);
     root.add(rw);
@@ -302,7 +468,9 @@ window.G = window.G || {};
   };
 
   G.CAR_SPECS = SPECS;
-  G.CAR_NAMES = Object.keys(SPECS);
+  // trafik faqat oddiy mashinalardan; premium — faqat avtosalonda
+  G.CAR_NAMES = Object.keys(SPECS).filter(function (n) { return !SPECS[n].premium; });
+  G.PREMIUM_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].premium; });
 
   // ---------- ENTITY ----------
   G.makeCarEntity = function (name, x, z, heading, colorOverride) {

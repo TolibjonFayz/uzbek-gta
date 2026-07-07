@@ -80,8 +80,45 @@ window.G = window.G || {};
     { x: 350, z: 450, r: 200, name: 'Mirobod' }
   ];
 
+  // minimapda diqqatga sazovor joylar uchun iconlar (nom bo'yicha)
+  G.LANDMARK_ICONS = {
+    'Benzokolonka': '⛽',
+    'Avto servis': '🔧',
+    'Amir Temur maydoni': '🐎',
+    'Hotel Uzbekistan': '🏨',
+    'Toshkent Teleminorasi': '📡',
+    'Chorsu bozori': '🛒',
+    'Minor masjidi': '🕌',
+    'Tashkent City': '🏙️',
+    'Mustaqillik maydoni': '🏛️',
+    'Humo Arena': '🏟️',
+    'Bunyodkor stadioni': '⚽',
+    'Hazrati Imom majmuasi': '🕌',
+    'Magic City': '🎡',
+    'Mega Planet': '🛍️',
+    'Navoiy teatri': '🎭',
+    'Toshkent vokzali': '🚆',
+    'Toshkent aeroporti': '✈️',
+    'Anhor kanali': '🌊',
+    'Kukeldash madrasasi': '🕌',
+    "Milliy bog'": '🌳',
+    "Botanika bog'i": '🌿'
+  };
+
   function vRoadAt(x) { for (var i = 0; i < G.ROADS.v.length; i++) if (G.ROADS.v[i].x === x) return G.ROADS.v[i]; return null; }
   function hRoadAt(z) { for (var i = 0; i < G.ROADS.h.length; i++) if (G.ROADS.h[i].z === z) return G.ROADS.h[i]; return null; }
+
+  // Bino/daraxt asfalt ustiga chiqib ketmasin: AABB yo'l polosasi bilan kesishsa true
+  function onAsphalt(x, z, hw, hd, margin) {
+    var m = (margin === undefined ? 1 : margin);
+    for (var i = 0; i < G.ROADS.v.length; i++) {
+      if (Math.abs(x - G.ROADS.v[i].x) < G.ROADS.v[i].halfW + m + hw) return true;
+    }
+    for (var j = 0; j < G.ROADS.h.length; j++) {
+      if (Math.abs(z - G.ROADS.h[j].z) < G.ROADS.h[j].halfW + m + hd) return true;
+    }
+    return false;
+  }
 
   // trafik yuradigan yo'llar ro'yxati (svetafor ma'lumotlari bilan)
   function buildTrafficRoads() {
@@ -109,6 +146,7 @@ window.G = window.G || {};
   // ---------- DARAXTLAR (instanced — minglab daraxt, 3 ta draw call) ----------
   var treeList = [];
   function plantTree(x, z, big) {
+    if (onAsphalt(x, z, 0.5, 0.5, 0)) return; // asfalt o'rtasida daraxt o'smaydi
     treeList.push({ x: x, z: z, s: big ? G.rand(1.15, 1.6) : G.rand(0.7, 1.05) });
     G.addCollider(x, z, 0.45, 0.45);
   }
@@ -340,6 +378,7 @@ window.G = window.G || {};
 
   // ---------- BINOLAR ----------
   function makeApartment(scene, x, z, w, d, floors, baseColor, style) {
+    if (onAsphalt(x, z, w / 2, d / 2)) return null; // yo'l ustiga qurmaymiz
     var h = floors * 3;
     var tex = G.buildingTexture(baseColor, floors, Math.max(3, Math.round(w / 4)), style || 'panelka');
     var mat = new THREE.MeshLambertMaterial({ map: tex });
@@ -382,6 +421,8 @@ window.G = window.G || {};
   function makeMahallaHouse(scene, x, z, rot) {
     var g = new THREE.Group();
     var w = G.rand(8, 11), d = G.rand(7, 9);
+    // hovli devori ham hisobga olinadi (d/2+5 gacha chiqadi)
+    if (onAsphalt(x, z, w / 2 + 2, d / 2 + 6)) return null;
     var wallMat = G.mat(G.pick([0xd8c9a8, 0xcfc0a0, 0xe0d2b4]));
     var house = G.box(w, 3.4, d, wallMat);
     house.position.y = 1.7;
@@ -410,6 +451,11 @@ window.G = window.G || {};
 
   // ---------- DO'KONLAR (interyer bilan) ----------
   function makeShop(scene, opts) {
+    // yo'l ustiga tushsa — umuman qurmaymiz (foodShops ro'yxatiga ham kirmaydi)
+    var gc = Math.cos(opts.rot || 0), gs = Math.sin(opts.rot || 0);
+    var ghw = (Math.abs(gc) * opts.w + Math.abs(gs) * opts.d) / 2;
+    var ghd = (Math.abs(gs) * opts.w + Math.abs(gc) * opts.d) / 2;
+    if (onAsphalt(opts.x, opts.z, ghw, ghd, 0.5)) return null;
     var g = new THREE.Group();
     var w = opts.w, d = opts.d, h = opts.h || 4.5;
     var wallMat = G.mat(opts.wallColor || 0xd9d4c8);
@@ -597,7 +643,7 @@ window.G = window.G || {};
       var kx, kz, dirX, dirZ;
       if (vertical) { kx = road.x + side * off; kz = along; dirX = -side; dirZ = 0; }
       else { kz = road.z + side * off; kx = along; dirX = 0; dirZ = -side; }
-      if (overlapsCollider(kx, kz, 5, 5) || inReserved(kx, kz, 5, 5)) continue;
+      if (overlapsCollider(kx, kz, 5, 5) || inReserved(kx, kz, 5, 5) || onAsphalt(kx, kz, 3.5, 3.5, 0.5)) continue;
       // boshqa kioskka juda yaqin bo'lmasin
       var tooClose = false;
       for (var f = 0; f < G.foodShops.length; f++) {
@@ -1066,30 +1112,50 @@ window.G = window.G || {};
     sign.position.set(cx, 14.5, cz + 10.2);
     scene.add(sign);
     G.addCollider(cx, cz, 25, 10);
-    // relslar
-    var railMat = G.mat(0x55585c);
+    // relslar — butun shahar bo'ylab, g'arbdan sharqqacha (poyezd train.js da yuradi)
+    var railMat = G.mat(0x55585c, { phong: true, shininess: 60 });
     [-1.2, 1.2].forEach(function (o) {
-      var rail = G.box(900, 0.2, 0.3, railMat);
-      rail.position.set(cx + 150, 0.1, cz + 40 + o);
+      var rail = G.box(3200, 0.14, 0.24, railMat);
+      rail.position.set(0, 0.17, 620 + o);
       scene.add(rail);
     });
-    var bed = new THREE.Mesh(new THREE.PlaneGeometry(900, 6), G.mat(0x6b6258));
-    bed.rotation.x = -Math.PI / 2;
-    bed.position.set(cx + 150, 0.04, cz + 40);
-    scene.add(bed);
-    // poyezd
-    var train = new THREE.Group();
-    var loco = G.box(14, 3.6, 3, G.mat(0x2e6b4f, { phong: true, shininess: 60 }));
-    loco.position.set(0, 2, 0);
-    train.add(loco);
-    for (var v = 1; v <= 3; v++) {
-      var vag = G.box(13, 3.2, 3, G.mat(0x3d7a5c));
-      vag.position.set(-15 * v, 1.9, 0);
-      train.add(vag);
+    // shpalli yotqizma (teksturali — arzon)
+    var bedCv = document.createElement('canvas');
+    bedCv.width = 64; bedCv.height = 32;
+    var bcx = bedCv.getContext('2d');
+    bcx.fillStyle = '#6b6258'; bcx.fillRect(0, 0, 64, 32);
+    for (var gi = 0; gi < 80; gi++) {
+      bcx.fillStyle = Math.random() < 0.5 ? '#7a7166' : '#5d554c';
+      bcx.fillRect(Math.random() * 64, Math.random() * 32, 2, 2);
     }
-    train.position.set(cx + 60, 0, cz + 40);
-    scene.add(train);
-    G.addCollider(cx + 60 - 22, cz + 40, 30, 1.8);
+    bcx.fillStyle = '#4a3b2c';
+    bcx.fillRect(26, 0, 12, 32);
+    var bedTex = new THREE.CanvasTexture(bedCv);
+    bedTex.wrapS = THREE.RepeatWrapping;
+    bedTex.repeat.set(3200 / 2.4, 1);
+    var bed = new THREE.Mesh(new THREE.PlaneGeometry(3200, 6.4), new THREE.MeshLambertMaterial({ map: bedTex }));
+    bed.rotation.x = -Math.PI / 2;
+    bed.position.set(0, 0.06, 620);
+    scene.add(bed);
+
+    // 1-platforma (train.js: PX1..PX2 = 235..365) + soyabon
+    var plat = G.box(140, 0.5, 12, G.mat(0xb8b2a6));
+    plat.position.set(cx, 0.25, 605);
+    scene.add(plat);
+    var pedge = G.box(140, 0.06, 0.5, G.mat(0xe8c93d));
+    pedge.position.set(cx, 0.54, 610.6);
+    scene.add(pedge);
+    for (var ci = -2; ci <= 2; ci++) {
+      var pcol = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 3.4, 6), G.mat(0x8a95a5));
+      pcol.position.set(cx + ci * 28, 2.2, 602);
+      scene.add(pcol);
+    }
+    var canopy = G.box(146, 0.18, 8, G.mat(0x2e6b8a, { phong: true, shininess: 50 }));
+    canopy.position.set(cx, 4.0, 603.5);
+    scene.add(canopy);
+    var psign = G.signMesh("1-PLATFORMA · AFROSIYOB", '#12355b', '#ffffff', 10, 1);
+    psign.position.set(cx, 3.1, 609);
+    scene.add(psign);
     G.landmarks.push({ x: cx, z: cz, name: 'Toshkent vokzali', r: 42, color: '#8fa5bd' });
   }
 
@@ -1330,6 +1396,7 @@ window.G = window.G || {};
     var i = cellIndex(x), j = cellIndex(z);
     if (i >= 0 && j >= 0) usedCells[i + ',' + j] = true;
   }
+  G.markUsed = markUsed; // salon.js ham ishlatadi (avtosalonlar + uy)
 
   var inst = { pan5: [], pan9: [], flatA: [], offG: [], house: [] };
   var INST_DIMS = { pan5: [14, 5.5], pan9: [14, 5.5], flatA: [12, 6], offG: [8, 6.5], house: [4.5, 3.75] };
@@ -1344,14 +1411,15 @@ window.G = window.G || {};
   function inReserved(x, z, hw, hd) {
     if (Math.abs(x - 202) < 14 + hw && z < 535) return true;          // kanal (vertikal)
     if (Math.abs(z - 520) < 14 + hd && x > 185) return true;          // kanal (gorizontal)
-    if (Math.abs(z - 620) < 10 + hd && x > -10 && x < 910) return true; // temir yo'l
+    if (Math.abs(z - 620) < 12 + hd) return true;                     // temir yo'l (butun shahar bo'ylab)
+    if (x > 225 && x < 375 && z > 592 && z < 634) return true;        // vokzal platformasi
     return false;
   }
   function tryPlace(type, x, z, rot90) {
     var dims = INST_DIMS[type];
     var hw = rot90 ? dims[1] : dims[0];
     var hd = rot90 ? dims[0] : dims[1];
-    if (overlapsCollider(x, z, hw, hd) || inReserved(x, z, hw, hd)) return false;
+    if (overlapsCollider(x, z, hw, hd) || inReserved(x, z, hw, hd) || onAsphalt(x, z, hw, hd)) return false;
     inst[type].push({ x: x, z: z, r: rot90 });
     G.addCollider(x, z, hw, hd);
     return true;
@@ -1569,7 +1637,7 @@ window.G = window.G || {};
 
     // ===== CHILONZOR (janubi-g'arb) =====
     landHumoArena(scene, -600, 75);
-    landBunyodkor(scene, -600, 620);
+    landBunyodkor(scene, -600, 850); // temir yo'l chizig'idan ko'chirildi (Chilonzorda, realdagidek)
     makeShop(scene, { x: -560, z: 476, w: 20, d: 14, rot: Math.PI, kind: 'korzinka', name: 'korzinka', signBg: '#e02020', signFg: '#ffffff', wallColor: 0xf0ede6 });
     makeShop(scene, { x: -520, z: 476, w: 13, d: 11, rot: Math.PI, kind: 'choyxona', name: 'CHILONZOR CHOYXONASI', signBg: '#1c6b4f', signFg: '#ffd23f', wallColor: 0xd8c9a8 });
     fillPark(scene, -450 + 80, 450 + 90, 90, true); // Milliy bog'
@@ -1617,11 +1685,12 @@ window.G = window.G || {};
     [[75, -75], [-75, -75], [-75, 75],            // Amir Temur, Tashkent City, Mustaqillik
      [-75, 250], [245, -75],                       // Navoiy teatri, Minor
      [-600, -600], [-600, -830], [-600, 75],       // Chorsu+Kukeldash, Hazrati Imom, Humo
-     [-600, 620], [250, -600], [400, 250],         // Bunyodkor, Teleminora, Magic City
+     [-600, 850], [250, -600], [400, 250],         // Bunyodkor, Teleminora, Magic City
      [640, -360], [300, 580],                      // Mega Planet, Vokzal
      [-300, -600], [-370, 540], [900, -100]        // parklar
     ].forEach(function (p) { markUsed(p[0], p[1]); });
     buildStations(scene); // benzokolonka + servislar (autofill'dan oldin — kolliderlar hisobga olinsin)
+    if (G.initSalon) G.initSalon(scene); // avtosalon (autofilldan OLDIN — joy band qilinadi)
     autoFillCity();
     finalizeInstanced(scene);
     scatterKiosks(scene, 50); // jami oziq-ovqat do'konlari ~50 taga yetkaziladi

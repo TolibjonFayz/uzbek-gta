@@ -74,6 +74,50 @@
     top:60px; left:10px; background:rgba(10,20,40,.6); border-radius:10px;
     padding:9px 13px; font-size:12px; line-height:1.75; backdrop-filter:blur(3px);
   }
+  /* ---------- Reyting ---------- */
+  #starHud {
+    top:12px; right:172px; background:rgba(10,20,40,.72); border:1px solid rgba(255,210,63,.5);
+    border-radius:14px; padding:5px 12px; font-size:14px; font-weight:bold; color:#ffd23f;
+    display:none; backdrop-filter:blur(4px);
+  }
+  #scorePanel {
+    position:fixed; inset:0; z-index:75; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
+  }
+  #scorePanel .sp-box {
+    background:#12203a; border:2px solid #ffd23f; border-radius:16px; padding:20px 24px;
+    width:min(92vw,380px); color:#fff; box-shadow:0 10px 40px rgba(0,0,0,.6);
+  }
+  .sp-title { font-size:24px; font-weight:bold; color:#ffd23f; text-align:center; letter-spacing:1px; }
+  .sp-rank { text-align:center; font-size:15px; color:#5be07a; margin:4px 0 14px; font-style:italic; }
+  .sp-row { display:flex; justify-content:space-between; padding:7px 2px; border-bottom:1px solid rgba(255,255,255,.09); font-size:14px; }
+  .sp-row b { color:#ffd23f; font-weight:600; }
+  #spClose { display:block; margin:16px auto 0; background:#ffd23f; color:#0b1e3d; border:none; border-radius:20px; padding:8px 26px; font-weight:bold; cursor:pointer; }
+  #mapStats {
+    position:absolute; top:14px; right:72px; width:44px; height:44px; border-radius:50%;
+    background:rgba(255,210,63,.18); color:#ffd23f; font-size:20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    border:1px solid rgba(255,210,63,.5);
+  }
+  /* ---------- Katta xarita ---------- */
+  #mapOverlay {
+    position:fixed; inset:0; z-index:70; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px;
+    background:rgba(3,8,18,.88); backdrop-filter:blur(4px);
+  }
+  #mapHint { color:#cfe3ff; font-size:13px; text-align:center; padding:0 14px; }
+  #mapHint b { color:#ffd23f; }
+  #bigMap {
+    border:2px solid rgba(255,210,63,.45); border-radius:12px;
+    cursor:crosshair; touch-action:none; background:#151f16;
+    box-shadow:0 10px 50px rgba(0,0,0,.6);
+  }
+  #mapClose {
+    position:absolute; top:14px; right:16px; width:44px; height:44px; border-radius:50%;
+    background:rgba(255,255,255,.12); color:#fff; font-size:20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    border:1px solid rgba(255,255,255,.3);
+  }
   /* ---------- Ovqat menyusi ---------- */
   #foodMenu {
     position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center;
@@ -177,7 +221,7 @@
   <div class="keys">
     <b>W A S D</b> — yurish / haydash &nbsp; <b>Enter</b> — mashinaga minish / tushish<br>
     <b>Space</b> — sakrash &nbsp; <b>Ctrl</b> — o'tirish &nbsp; <b>Shift</b> — yugurish &nbsp; <b>F</b> — musht &nbsp; <b>E</b> — ovqat olish<br>
-    <b>V</b> — salon kamerasi &nbsp; <b>M</b> — keyingi qo'shiq &nbsp; <b>H</b> — klakson &nbsp; <b>T</b> — vaqtni tezlatish
+    <b>V</b> — salon kamerasi &nbsp; <b>M</b> — keyingi qo'shiq &nbsp; <b>T</b> — vaqtni tezlatish &nbsp; <b>X</b> — xarita
   </div>
 </div>
 
@@ -215,7 +259,31 @@
 
 <div id="joyZone"></div>
 <div id="joyBase"><div id="joyKnob"></div></div>
+<div id="mapOverlay">
+  <div id="mapHint"><b>X</b> / <b>Esc</b> — yopish &nbsp;·&nbsp; Xaritaga <b>ikki marta bosing</b> — marshrut chiziladi &nbsp;·&nbsp; o'sha joyga yana ikki marta — bekor &nbsp;·&nbsp; ⭐ — yulduzlar</div>
+  <canvas id="bigMap" width="600" height="600"></canvas>
+  <div id="mapClose">✕</div>
+  <div id="mapStats">🏆</div>
+</div>
+
+<div id="starHud" class="hud"></div>
+
+<div id="scorePanel">
+  <div class="sp-box">
+    <div class="sp-title">🏆 REYTING</div>
+    <div class="sp-rank"><span id="spScore"></span> — <span id="spTitle"></span></div>
+    <div class="sp-row"><span>📏 Masofa</span><b id="spDist"></b></div>
+    <div class="sp-row"><span>⭐ Yulduzlar</span><b id="spStars"></b></div>
+    <div class="sp-row"><span>🚕 Missiyalar</span><b id="spMis"></b></div>
+    <div class="sp-row"><span>💰 Ishlab topilgan</span><b id="spEarn"></b></div>
+    <div class="sp-row"><span>🚀 Eng yuqori tezlik</span><b id="spSpeed"></b></div>
+    <div class="sp-row"><span>⏱ O'yin vaqti</span><b id="spTime"></b></div>
+    <button id="spClose">Yopish (B)</button>
+  </div>
+</div>
+
 <div id="btns">
+  <div class="mbtn" id="mbMap"><div class="lbl">🗺️<small>Xarita</small></div></div>
   <div class="mbtn" id="mbEnter"><div class="lbl">🚗<small>Enter</small></div></div>
   <div class="mbtn" id="mbFood"><div class="lbl">🍽️<small>Ovqat</small></div></div>
   <div class="mbtn" id="mbPunch"><div class="lbl">👊<small>Musht</small></div></div>
@@ -234,12 +302,17 @@
 <script src="js/audio.js?v=18"></script>
 <script src="js/daynight.js?v=18"></script>
 <script src="js/vehicles.js?v=18"></script>
+<script src="js/salon.js?v=18"></script>
 <script src="js/world.js?v=18"></script>
 <script src="js/traffic.js?v=18"></script>
 <script src="js/peds.js?v=18"></script>
+<script src="js/train.js?v=18"></script>
 <script src="js/police.js?v=18"></script>
 <script src="js/damage.js?v=18"></script>
+<script src="js/skid.js?v=18"></script>
 <script src="js/missions.js?v=18"></script>
+<script src="js/map.js?v=18"></script>
+<script src="js/score.js?v=18"></script>
 <script src="js/main.js?v=18"></script>
 </body>
 </html>
