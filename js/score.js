@@ -7,36 +7,42 @@ window.G = window.G || {};
   var scene = null;
   var LS_KEY = 'tc_stats_v1';
 
-  // Yulduzlar joylari: mashhur joylar oldi + chorraha burchaklari (bino yo'q zonalar)
+  // Yulduzlar joylari: butun 5x5 km xarita bo'ylab tarqatilgan (bir joyda to'planmagan)
   var STAR_SPOTS = [
-    [75, -40],      // Amir Temur maydoni
-    [-75, -105],    // Tashkent City
-    [-95, 75],      // Mustaqillik maydoni
-    [245, -95],     // Minor masjidi oldi
-    [75, -100],     // Hotel Uzbekistan
-    [-75, 222],     // Navoiy teatri
-    [32, -55],      // Kuranty
-    [-600, -560],   // Chorsu bozori oldi
-    [-433, -167],   // Eski shahar chorrahasi
-    [250, -560],    // Teleminora
-    [420, 210],     // Magic City
-    [640, -390],    // Mega Planet
-    [300, 545],     // Vokzal maydoni
-    [180, 1022],    // Aeroport yo'li
-    [-600, 902],    // Bunyodkor ortida
-    [900, -60],     // Botanika bog'i
-    [-370, 505],    // Milliy bog'
-    [-733, -733],   // shimoli-g'arbiy burchak
-    [767, 767],     // janubi-sharqiy burchak
-    [-733, 767],    // janubi-g'arbiy burchak
-    [767, -733],    // shimoli-sharqiy burchak
-    [21, 469],      // markaz janubi
-    [-467, 21],     // g'arbiy chorraha
-    [467, -133],    // sharqiy chorraha
-    [167, -467]     // shimoliy chorraha
+    // markaz (faqat 3 ta)
+    [75, -40],       // Amir Temur maydoni
+    [-95, 75],       // Mustaqillik
+    [-1650, -1595],  // Minor masjidi (ShG' kvadrant)
+    // eski shahar va o'rta hududlar
+    [-600, -560],    // Chorsu
+    [250, -560],     // Teleminora
+    [1630, 1595],    // Magic City (JSh kvadrant)
+    [600, -1595],    // Mega Planet (shimol)
+    [300, 545],      // Vokzal
+    [180, 1022],     // Aeroport yo'li
+    [-1650, 1595],   // Bunyodkor (JG' kvadrant)
+    [900, -60],      // Botanika bog'i
+    [-370, 505],     // Milliy bog'
+    [-433, -167],    // Eski shahar
+    // Yangi O'zbekiston tomoni
+    [1620, -300],    // Yangi O'zbekiston bog'i
+    [1650, -1450],   // Olimpiya halqalari
+    [1530, -1530],   // Stadion yoni
+    [1760, -1600],   // Muz saroyi
+    [1630, 340],     // Yangi Shahar minoralari
+    [1620, 838],     // Lux Motors oldi
+    // g'arbiy tomon
+    [-1610, 100],    // Mening uyim yoni
+    // yangi halqa yo'li burchaklari (uzoq safarlar uchun)
+    [-2383, -2383],
+    [2383, 2383],
+    [-2383, 2383],
+    [2383, -2383],
+    // shimoliy chekka
+    [21, -1883]
   ];
 
-  var stats = { dist: 0, distDrive: 0, stars: [], missions: 0, earned: 0, topSpeed: 0, time: 0, money: 0, owned: [] };
+  var stats = { dist: 0, distDrive: 0, stars: [], missions: 0, earned: 0, topSpeed: 0, time: 0, money: 0, owned: [], races: 0, best: {} };
   var starMeshes = [];
   var starsPublic = [];
   var saveT = 0, hudT = 0, lastX = null, lastZ = null, hudEl = null;
@@ -49,6 +55,7 @@ window.G = window.G || {};
         for (var k in stats) if (d[k] !== undefined) stats[k] = d[k];
         if (!Array.isArray(stats.stars)) stats.stars = [];
         if (!Array.isArray(stats.owned)) stats.owned = [];
+        if (typeof stats.best !== 'object' || !stats.best) stats.best = {};
       }
     } catch (e) {}
   }
@@ -106,7 +113,20 @@ window.G = window.G || {};
   G.starTotal = STAR_SPOTS.length;
 
   G.scoreOf = function () {
-    return Math.round(stats.dist / 1000 * 15 + stats.stars.length * 400 + stats.missions * 250 + stats.earned / 1000);
+    return Math.round(stats.dist / 1000 * 15 + stats.stars.length * 400 + stats.missions * 250 + stats.races * 300 + stats.earned / 1000);
+  };
+
+  // poyga g'alabasi: hisob + rekord. true = yangi rekord
+  G.raceWin = function (id, time, prize) {
+    stats.races++;
+    stats.earned += prize || 0;
+    var rec = false;
+    if (!stats.best[id] || time < stats.best[id]) {
+      stats.best[id] = Math.round(time * 10) / 10;
+      rec = true;
+    }
+    save();
+    return rec;
   };
   var TITLES = [
     [15000, 'TOSHKENT QIROLI 👑'],
@@ -198,6 +218,7 @@ window.G = window.G || {};
       document.getElementById('spDist').textContent = (stats.dist / 1000).toFixed(1) + ' km (mashinada ' + (stats.distDrive / 1000).toFixed(1) + ')';
       document.getElementById('spStars').textContent = stats.stars.length + ' / ' + STAR_SPOTS.length;
       document.getElementById('spMis').textContent = stats.missions + ' ta';
+      document.getElementById('spRaces').textContent = stats.races + ' ta';
       document.getElementById('spEarn').textContent = fmt(stats.earned) + " so'm";
       document.getElementById('spSpeed').textContent = Math.round(stats.topSpeed) + ' km/soat';
       document.getElementById('spTime').textContent = Math.floor(stats.time / 60) + ' daqiqa';

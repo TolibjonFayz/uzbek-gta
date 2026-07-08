@@ -4,22 +4,26 @@
 window.G = window.G || {};
 
 (function () {
-  var MAP = 1200;
+  var MAP = 2500; // xarita 5000x5000 m (~5 barobar katta)
 
   G.ROADS = {
     v: [
-      { x: -1000, halfW: 10, ring: true }, { x: -750, halfW: 8 }, { x: -450, halfW: 9 },
+      { x: -2400, halfW: 10, ring: true }, { x: -1900, halfW: 8 }, { x: -1400, halfW: 9 },
+      { x: -1000, halfW: 10 }, { x: -750, halfW: 8 }, { x: -450, halfW: 9 },
       { x: -150, halfW: 8 },
       { x: 0, halfW: 14, main: true, name: "Amir Temur shoh ko'chasi" },
       { x: 150, halfW: 8 }, { x: 450, halfW: 9 }, { x: 750, halfW: 8 },
-      { x: 1000, halfW: 10, ring: true }
+      { x: 1000, halfW: 10 }, { x: 1400, halfW: 9 }, { x: 1900, halfW: 8 },
+      { x: 2400, halfW: 10, ring: true }
     ],
     h: [
-      { z: -1000, halfW: 10, ring: true }, { z: -750, halfW: 8 }, { z: -450, halfW: 9 },
+      { z: -2400, halfW: 10, ring: true }, { z: -1900, halfW: 8 }, { z: -1400, halfW: 9 },
+      { z: -1000, halfW: 10 }, { z: -750, halfW: 8 }, { z: -450, halfW: 9 },
       { z: -150, halfW: 8 },
       { z: 0, halfW: 14, main: true, name: "Navoiy shoh ko'chasi" },
       { z: 150, halfW: 8 }, { z: 450, halfW: 9 }, { z: 750, halfW: 8 },
-      { z: 1000, halfW: 10, ring: true }
+      { z: 1000, halfW: 10 }, { z: 1400, halfW: 9 }, { z: 1900, halfW: 8 },
+      { z: 2400, halfW: 10, ring: true }
     ]
   };
 
@@ -77,7 +81,12 @@ window.G = window.G || {};
     { x: 680, z: -200, r: 330, name: "Mirzo Ulug'bek" },
     { x: 420, z: 830, r: 320, name: 'Sergeli' },
     { x: 300, z: 1060, r: 220, name: 'Toshkent aeroporti' },
-    { x: 350, z: 450, r: 200, name: 'Mirobod' }
+    { x: 350, z: 450, r: 200, name: 'Mirobod' },
+    // Yangi O'zbekiston tomoni (sharq) + g'arbiy dala hovlilar
+    { x: 1650, z: -300, r: 430, name: "Yangi O'zbekiston bog'i" },
+    { x: 1650, z: -1600, r: 480, name: 'Olimpiya shaharchasi' },
+    { x: 1650, z: 600, r: 550, name: 'Yangi Shahar' },
+    { x: -1650, z: 200, r: 480, name: "G'arbiy dala hovli" }
   ];
 
   // minimapda diqqatga sazovor joylar uchun iconlar (nom bo'yicha)
@@ -102,7 +111,11 @@ window.G = window.G || {};
     'Anhor kanali': '🌊',
     'Kukeldash madrasasi': '🕌',
     "Milliy bog'": '🌳',
-    "Botanika bog'i": '🌿'
+    "Botanika bog'i": '🌿',
+    "Yangi O'zbekiston bog'i": '🕊️',
+    'Olimpiya stadioni': '🥇',
+    'Muz saroyi': '⛸️',
+    'Yangi Shahar City': '🌆'
   };
 
   function vRoadAt(x) { for (var i = 0; i < G.ROADS.v.length; i++) if (G.ROADS.v[i].x === x) return G.ROADS.v[i]; return null; }
@@ -705,12 +718,164 @@ window.G = window.G || {};
   }
 
   function buildStations(scene) {
-    // benzokolonkalar (yo'l bo'yida, tarqoq)
-    [[172, -260], [-172, 260], [172, 560], [-560, 172], [560, -172], [-172, -560]]
+    // benzokolonkalar (yo'l bo'yida, tarqoq — yangi hududlarda ham)
+    [[172, -260], [-172, 260], [172, 560], [-560, 172], [560, -172], [-172, -560],
+     [1428, -600], [-1428, 300], [172, 1428], [1428, -1372]]
       .forEach(function (p) { makeGasStation(scene, p[0], p[1]); });
     // avto servislar
-    [[-172, -260], [172, 260], [-560, -172], [560, 172]]
+    [[-172, -260], [172, 260], [-560, -172], [560, 172], [1428, 600], [-1428, -500]]
       .forEach(function (p) { makeRepairStation(scene, p[0], p[1]); });
+  }
+
+  // ---------- YANGI O'ZBEKISTON BOG'I ----------
+  function landYangiPark(scene, cx, cz) {
+    var lawn = new THREE.Mesh(new THREE.CircleGeometry(150, 36), G.mat(0x4d8a42));
+    lawn.rotation.x = -Math.PI / 2;
+    lawn.position.set(cx, 0.08, cz);
+    scene.add(lawn);
+    var path = new THREE.Mesh(new THREE.PlaneGeometry(8, 290), G.mat(0xc4b89c));
+    path.rotation.x = -Math.PI / 2;
+    path.position.set(cx, 0.12, cz);
+    scene.add(path);
+    var path2 = new THREE.Mesh(new THREE.PlaneGeometry(290, 8), G.mat(0xc4b89c));
+    path2.rotation.x = -Math.PI / 2;
+    path2.position.set(cx, 0.12, cz);
+    scene.add(path2);
+    // Istiqlol ustuni + Humo qanotlari
+    var col = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3, 38, 10), G.mat(0xf5f2ea, { phong: true, shininess: 40 }));
+    col.position.set(cx, 19, cz);
+    scene.add(col);
+    var globe = new THREE.Mesh(new THREE.SphereGeometry(3.2, 12, 9), G.mat(0xd9a441, { phong: true, shininess: 90 }));
+    globe.position.set(cx, 40, cz);
+    scene.add(globe);
+    [-1, 1].forEach(function (s) {
+      var wing = G.box(7, 0.5, 2.4, G.mat(0xf5f2ea));
+      wing.position.set(cx + s * 4.6, 39, cz);
+      wing.rotation.z = s * 0.5;
+      scene.add(wing);
+    });
+    G.addCollider(cx, cz, 3.4, 3.4);
+    // ko'l
+    var lake = new THREE.Mesh(new THREE.CircleGeometry(38, 26), G.mat(0x2f7fb8, { phong: true, shininess: 130, transparent: true, opacity: 0.92 }));
+    lake.rotation.x = -Math.PI / 2;
+    lake.position.set(cx + 85, 0.1, cz + 70);
+    scene.add(lake);
+    // gullar doiralari
+    for (var f = 0; f < 8; f++) {
+      var ang = f / 8 * Math.PI * 2;
+      var bed = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.4, 10), G.mat(G.pick([0xc94b6a, 0xd9a441, 0xba4bc9, 0xc0574a])));
+      bed.position.set(cx + Math.cos(ang) * 30, 0.2, cz + Math.sin(ang) * 30);
+      scene.add(bed);
+    }
+    // daraxtlar (ko'l va yo'lakchalardan chetda)
+    for (var t = 0; t < 42; t++) {
+      var tx = cx + G.rand(-140, 140), tz = cz + G.rand(-140, 140);
+      if (Math.hypot(tx - (cx + 85), tz - (cz + 70)) < 44) continue;
+      if (Math.abs(tx - cx) < 6 || Math.abs(tz - cz) < 6) continue;
+      plantTree(tx, tz, Math.random() < 0.5);
+    }
+    // bayroq
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 26, 6), G.mat(0xd0d0d0));
+    pole.position.set(cx + 24, 13, cz - 24);
+    scene.add(pole);
+    var flag = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 3.8),
+      new THREE.MeshBasicMaterial({ map: G.flagTexture(), side: THREE.DoubleSide }));
+    flag.position.set(cx + 27.9, 23, cz - 24);
+    scene.add(flag);
+    G.addCollider(cx + 24, cz - 24, 0.6, 0.6);
+    var sign = G.signMesh("YANGI O'ZBEKISTON BOG'I", '#1c6b4f', '#ffffff', 18, 1.6);
+    sign.position.set(cx, 6, cz + 148);
+    scene.add(sign);
+    G.landmarks.push({ x: cx, z: cz, name: "Yangi O'zbekiston bog'i", r: 150, color: '#4d8a42' });
+  }
+
+  // ---------- OLIMPIYA SHAHARCHASI (stadion + muz saroyi) ----------
+  function landOlympic(scene, cx, cz) {
+    // STADION (oval kosa)
+    var sx = cx - 120, sz = cz;
+    var bowl = new THREE.Mesh(new THREE.CylinderGeometry(58, 66, 15, 22, 1, true),
+      G.mat(0xd8dde2, { phong: true, shininess: 30 }));
+    bowl.material.side = THREE.DoubleSide;
+    bowl.position.set(sx, 7.5, sz);
+    bowl.scale.z = 0.82;
+    scene.add(bowl);
+    var lip = new THREE.Mesh(new THREE.TorusGeometry(60, 2.2, 8, 22), G.mat(0xc23b2e));
+    lip.rotation.x = Math.PI / 2;
+    lip.position.set(sx, 15.4, sz);
+    lip.scale.y = 0.82;
+    scene.add(lip);
+    var field = new THREE.Mesh(new THREE.CircleGeometry(48, 22), G.mat(0x3e8a3e));
+    field.rotation.x = -Math.PI / 2;
+    field.position.set(sx, 0.15, sz);
+    field.scale.y = 0.8;
+    scene.add(field);
+    G.addCollider(sx, sz, 62, 52);
+    var sSign = G.signMesh('OLIMPIYA STADIONI', '#12355b', '#ffffff', 18, 1.8);
+    sSign.position.set(sx, 18, sz + 52);
+    scene.add(sSign);
+    G.landmarks.push({ x: sx, z: sz, name: 'Olimpiya stadioni', r: 70, color: '#c23b2e' });
+
+    // MUZ SAROYI (yarim silindr — muzli gumbaz)
+    var mx = cx + 110, mz = cz - 60;
+    var arch = new THREE.Mesh(new THREE.CylinderGeometry(26, 26, 68, 18, 1, false, 0, Math.PI),
+      G.mat(0xdfeef5, { phong: true, shininess: 90 }));
+    arch.rotation.z = Math.PI / 2;
+    arch.position.set(mx, 8, mz);
+    scene.add(arch);
+    var base = G.box(68, 8, 52, G.mat(0xc9dde8, { phong: true, shininess: 60 }));
+    base.position.set(mx, 4, mz);
+    scene.add(base);
+    var entry = G.box(16, 6, 3, G.mat(0x2a7a8c));
+    entry.position.set(mx, 3, mz + 27);
+    scene.add(entry);
+    G.addCollider(mx, mz, 35, 27);
+    var mSign = G.signMesh('MUZ SAROYI', '#2a7a8c', '#ffffff', 13, 1.6);
+    mSign.position.set(mx, 12, mz + 28.5);
+    scene.add(mSign);
+    G.landmarks.push({ x: mx, z: mz, name: 'Muz saroyi', r: 45, color: '#7fd0e8' });
+
+    // Olimpiya halqalari (kirishda)
+    var ringCols = [0x0085c7, 0x000000, 0xdf0024, 0xf4c300, 0x009f3d];
+    for (var r = 0; r < 5; r++) {
+      var ring = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.45, 8, 20), G.mat(ringCols[r], { phong: true, shininess: 60 }));
+      ring.position.set(cx - 18 + r * 9 - (r % 2) * 4.5, r % 2 === 0 ? 10 : 6.6, cz + 130);
+      scene.add(ring);
+    }
+    var stand = G.box(46, 1, 3, G.mat(0x8a95a5));
+    stand.position.set(cx, 0.5, cz + 130);
+    scene.add(stand);
+    G.addCollider(cx, cz + 130, 23, 1.6);
+
+    // sport maydonlari: basketbol + suzish havzasi
+    var court = new THREE.Mesh(new THREE.PlaneGeometry(28, 15), G.mat(0xc47b3d));
+    court.rotation.x = -Math.PI / 2;
+    court.position.set(cx + 60, 0.1, cz + 80);
+    scene.add(court);
+    var pool = new THREE.Mesh(new THREE.PlaneGeometry(30, 14), G.mat(0x2f9fd8, { phong: true, shininess: 130 }));
+    pool.rotation.x = -Math.PI / 2;
+    pool.position.set(cx - 40, 0.1, cz + 90);
+    scene.add(pool);
+  }
+
+  // ---------- YANGI SHAHAR (zamonaviy minoralar) ----------
+  function landYangiShahar(scene, cx, cz) {
+    makeGlassTower(scene, cx - 55, cz - 45, 18, 18, 112, '#1a3c5c');
+    makeGlassTower(scene, cx + 50, cz - 50, 15, 15, 96, '#27506b');
+    makeGlassTower(scene, cx - 50, cz + 55, 15, 15, 86, '#2a5570');
+    makeGlassTower(scene, cx + 58, cz + 48, 20, 14, 124, '#173a52');
+    makeGlassTower(scene, cx + 5, cz + 90, 13, 13, 70, '#1f4258');
+    var pond = new THREE.Mesh(new THREE.CylinderGeometry(14, 14, 0.24, 20),
+      G.mat(0x2f7fb8, { phong: true, shininess: 130, opacity: 0.92, transparent: true }));
+    pond.position.set(cx, 0.12, cz);
+    scene.add(pond);
+    for (var i = 0; i < 10; i++) {
+      var ang = i / 10 * Math.PI * 2;
+      plantTree(cx + Math.cos(ang) * 24, cz + Math.sin(ang) * 24, false);
+    }
+    var sign = G.signMesh('YANGI SHAHAR', '#173a52', '#7fd0e8', 14, 1.8);
+    sign.position.set(cx, 10, cz + 30);
+    scene.add(sign);
+    G.landmarks.push({ x: cx, z: cz, name: 'Yangi Shahar City', r: 90, color: '#2a5570' });
   }
 
   // ---------- DIQQATGA SAZOVOR JOYLAR ----------
@@ -1115,7 +1280,7 @@ window.G = window.G || {};
     // relslar — butun shahar bo'ylab, g'arbdan sharqqacha (poyezd train.js da yuradi)
     var railMat = G.mat(0x55585c, { phong: true, shininess: 60 });
     [-1.2, 1.2].forEach(function (o) {
-      var rail = G.box(3200, 0.14, 0.24, railMat);
+      var rail = G.box(MAP * 2 + 200, 0.14, 0.24, railMat);
       rail.position.set(0, 0.17, 620 + o);
       scene.add(rail);
     });
@@ -1132,8 +1297,8 @@ window.G = window.G || {};
     bcx.fillRect(26, 0, 12, 32);
     var bedTex = new THREE.CanvasTexture(bedCv);
     bedTex.wrapS = THREE.RepeatWrapping;
-    bedTex.repeat.set(3200 / 2.4, 1);
-    var bed = new THREE.Mesh(new THREE.PlaneGeometry(3200, 6.4), new THREE.MeshLambertMaterial({ map: bedTex }));
+    bedTex.repeat.set((MAP * 2 + 200) / 2.4, 1);
+    var bed = new THREE.Mesh(new THREE.PlaneGeometry(MAP * 2 + 200, 6.4), new THREE.MeshLambertMaterial({ map: bedTex }));
     bed.rotation.x = -Math.PI / 2;
     bed.position.set(0, 0.06, 620);
     scene.add(bed);
@@ -1384,7 +1549,7 @@ window.G = window.G || {};
   }
 
   // ---------- SHAHARNI AVTO-TO'LDIRISH (instanced — yuzlab bino, bir nechta draw call) ----------
-  var R_EDGES = [-1000, -750, -450, -150, 0, 150, 450, 750, 1000];
+  var R_EDGES = [-2400, -1900, -1400, -1000, -750, -450, -150, 0, 150, 450, 750, 1000, 1400, 1900, 2400];
   var usedCells = {};
   function cellIndex(v) {
     for (var i = 0; i < R_EDGES.length - 1; i++) {
@@ -1448,7 +1613,18 @@ window.G = window.G || {};
         else if (d === 'Yunusobod' || d === 'Chilonzor' || d === 'Sergeli') plan = 'panelka';
         else if (d === 'Eski shahar') plan = 'mahalla';
         else if (d === "Mirzo Ulug'bek") plan = 'mix';
+        else if (d === 'Yangi Shahar') plan = 'office';               // zamonaviy shisha binolar
+        else if (d === "Yangi O'zbekiston bog'i") plan = 'green';     // faqat daraxtlar
+        else if (d === 'Olimpiya shaharchasi') plan = 'suburb';
         else plan = 'suburb';
+
+        if (plan === 'green') {
+          for (var tg = 0; tg < 12; tg++) {
+            var tgx = G.rand(left, right), tgz = G.rand(top, bot);
+            if (!overlapsCollider(tgx, tgz, 1, 1) && !inReserved(tgx, tgz, 1, 1)) plantTree(tgx, tgz, Math.random() < 0.6);
+          }
+          continue;
+        }
 
         if (plan === 'mahalla' || plan === 'suburb') {
           var skip = plan === 'suburb' ? 0.5 : 0.15;
@@ -1577,7 +1753,7 @@ window.G = window.G || {};
     landTashkentCity(scene, -75, -75);
     landMustaqillik(scene, -75, 75);
     landNavoiyTeatr(scene, -75, 250);
-    landMinor(scene, 245, -75);
+    landMinor(scene, -1650, -1650); // shimoli-g'arbga ko'chirildi (markaz bo'shashsin)
 
     // Kuranty
     (function () {
@@ -1637,20 +1813,20 @@ window.G = window.G || {};
 
     // ===== CHILONZOR (janubi-g'arb) =====
     landHumoArena(scene, -600, 75);
-    landBunyodkor(scene, -600, 850); // temir yo'l chizig'idan ko'chirildi (Chilonzorda, realdagidek)
+    landBunyodkor(scene, -1650, 1650); // janubi-g'arbiy kvadrantga — har tomonda bittadan yirik obyekt
     makeShop(scene, { x: -560, z: 476, w: 20, d: 14, rot: Math.PI, kind: 'korzinka', name: 'korzinka', signBg: '#e02020', signFg: '#ffffff', wallColor: 0xf0ede6 });
     makeShop(scene, { x: -520, z: 476, w: 13, d: 11, rot: Math.PI, kind: 'choyxona', name: 'CHILONZOR CHOYXONASI', signBg: '#1c6b4f', signFg: '#ffd23f', wallColor: 0xd8c9a8 });
     fillPark(scene, -450 + 80, 450 + 90, 90, true); // Milliy bog'
     G.landmarks.push({ x: -370, z: 540, name: "Milliy bog'", r: 90, color: '#3e7a3a' });
 
     // ===== MIRZO ULUG'BEK (sharq) =====
-    landMegaPlanet(scene, 640, -450 + 90);
+    landMegaPlanet(scene, 600, -1650); // shimolga ko'chirildi
     fillPark(scene, 900, -100, 80, false); // Botanika bog'i
     G.landmarks.push({ x: 900, z: -100, name: "Botanika bog'i", r: 85, color: '#3e7a3a' });
     makeShop(scene, { x: 620, z: 176, w: 14, d: 11, rot: Math.PI, kind: 'oshxona', name: 'BESHQOZON', signBg: '#1c7a45', signFg: '#ffd23f', wallColor: 0xd9c9a8 });
 
     // ===== MIROBOD / JANUB =====
-    landMagicCity(scene, 400, 250);
+    landMagicCity(scene, 1630, 1650); // janubi-sharqiy kvadrantga ko'chirildi
     landVokzal(scene, 300, 580);
 
     // ===== SERGELI =====
@@ -1682,18 +1858,26 @@ window.G = window.G || {};
     }
     // ===== BO'SH KATAKLARNI BINOLAR BILAN TO'LDIRISH =====
     // katta inshootlar joylashgan kataklar to'ldirilmaydi
+    // ===== YANGI O'ZBEKISTON TOMONI (sharq) =====
+    landYangiPark(scene, 1650, -300);
+    landOlympic(scene, 1650, -1600);
+    landYangiShahar(scene, 1650, 300);
+
     [[75, -75], [-75, -75], [-75, 75],            // Amir Temur, Tashkent City, Mustaqillik
      [-75, 250], [245, -75],                       // Navoiy teatri, Minor
      [-600, -600], [-600, -830], [-600, 75],       // Chorsu+Kukeldash, Hazrati Imom, Humo
-     [-600, 850], [250, -600], [400, 250],         // Bunyodkor, Teleminora, Magic City
-     [640, -360], [300, 580],                      // Mega Planet, Vokzal
-     [-300, -600], [-370, 540], [900, -100]        // parklar
+     [-1650, 1650], [250, -600], [1630, 1650],     // Bunyodkor (JG'), Teleminora, Magic City (JSh)
+     [600, -1650], [300, 580], [-1650, -1650],     // Mega Planet (Sh), Vokzal, Minor (ShG')
+     [-300, -600], [-370, 540], [900, -100],       // parklar
+     [1650, -300], [1650, -160], [1530, -300],     // Yangi O'zbekiston bog'i (3 katak)
+     [1530, -1600], [1760, -1600], [1650, -1450],  // Olimpiya shaharchasi
+     [1650, 300], [1650, 200]                      // Yangi Shahar minoralari
     ].forEach(function (p) { markUsed(p[0], p[1]); });
     buildStations(scene); // benzokolonka + servislar (autofill'dan oldin — kolliderlar hisobga olinsin)
     if (G.initSalon) G.initSalon(scene); // avtosalon (autofilldan OLDIN — joy band qilinadi)
     autoFillCity();
     finalizeInstanced(scene);
-    scatterKiosks(scene, 50); // jami oziq-ovqat do'konlari ~50 taga yetkaziladi
+    scatterKiosks(scene, 72); // katta xarita — do'konlar ham ko'proq
 
     // tumanlardagi tasodifiy daraxtlar (binolarga tegmaydigan joylarda)
     for (var rt = 0; rt < 220; rt++) {

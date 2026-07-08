@@ -4,7 +4,7 @@
 window.G = window.G || {};
 
 (function () {
-  var WORLD = 1290;   // xarita chegarasi (±)
+  var WORLD = 2590;   // xarita chegarasi (±)
   var overlay = null, cv = null, c2 = null, open = false;
 
   G.waypoint = null;                            // {x, z} — qo'lda qo'yilgan manzil
@@ -35,8 +35,8 @@ window.G = window.G || {};
   function nodeId(i, j) { return i * HZ.length + j; }
 
   function snapToRoad(x, z) {
-    x = G.clamp(x, -1200, 1200);
-    z = G.clamp(z, -1200, 1200);
+    x = G.clamp(x, -2400, 2400);
+    z = G.clamp(z, -2400, 2400);
     var best = null, bd = 1e9;
     for (var i = 0; i < VX.length; i++) {
       var d = Math.abs(x - VX[i]);
@@ -227,7 +227,7 @@ window.G = window.G || {};
     c2.fillStyle = '#151f16';
     c2.fillRect(0, 0, W, W);
     c2.fillStyle = '#1c2a1d';
-    c2.fillRect(wx(-1200), wz(-1200), 2400 * sc, 2400 * sc);
+    c2.fillRect(wx(-2500), wz(-2500), 5000 * sc, 5000 * sc);
 
     // tumanlar
     c2.textAlign = 'center'; c2.textBaseline = 'middle';
@@ -243,22 +243,22 @@ window.G = window.G || {};
 
     // yo'llar
     G.ROADS.v.forEach(function (r) {
-      var wpx = Math.max(2, r.halfW * 2 * sc);
+      var wpx = Math.max(1.6, r.halfW * 2 * sc);
       c2.fillStyle = r.main ? '#a2a8ae' : (r.ring ? '#8a9096' : '#767c82');
-      c2.fillRect(wx(r.x) - wpx / 2, wz(-1200), wpx, 2400 * sc);
+      c2.fillRect(wx(r.x) - wpx / 2, wz(-2500), wpx, 5000 * sc);
     });
     G.ROADS.h.forEach(function (r) {
-      var wpx = Math.max(2, r.halfW * 2 * sc);
+      var wpx = Math.max(1.6, r.halfW * 2 * sc);
       c2.fillStyle = r.main ? '#a2a8ae' : (r.ring ? '#8a9096' : '#767c82');
-      c2.fillRect(wx(-1200), wz(r.z) - wpx / 2, 2400 * sc, wpx);
+      c2.fillRect(wx(-2500), wz(r.z) - wpx / 2, 5000 * sc, wpx);
     });
 
     // kanal (Anhor)
     c2.strokeStyle = '#2f7fb8';
-    c2.lineWidth = Math.max(3, 14 * sc);
+    c2.lineWidth = Math.max(2.5, 14 * sc);
     c2.beginPath();
-    c2.moveTo(wx(202), wz(-1200)); c2.lineTo(wx(202), wz(535));
-    c2.moveTo(wx(185), wz(520)); c2.lineTo(wx(1200), wz(520));
+    c2.moveTo(wx(202), wz(-2500)); c2.lineTo(wx(202), wz(535));
+    c2.moveTo(wx(185), wz(520)); c2.lineTo(wx(2500), wz(520));
     c2.stroke();
 
     // temir yo'l
@@ -279,6 +279,7 @@ window.G = window.G || {};
     // marshrutlar (yo'llar bo'ylab)
     drawRoute(G.routes.waypoint, 'rgba(125,240,138,0.9)', 4, sc);
     drawRoute(G.routes.mission, 'rgba(255,210,63,0.95)', 5, sc);
+    drawRoute(G.routes.race, 'rgba(255,140,26,0.95)', 5, sc);
 
     // diqqatga sazovor joylar
     var br = Math.max(8, W * 0.015);
@@ -313,11 +314,22 @@ window.G = window.G || {};
       }
     }
 
-    // missiya belgilari
+    // missiya belgilari (taklif — kichikroq, raqib — qizil nuqta)
     if (G.missionMarkers) {
       G.missionMarkers.forEach(function (m) {
+        if (m.kind === 'rival') {
+          c2.fillStyle = '#ff4444';
+          c2.beginPath();
+          c2.arc(wx(m.x), wz(m.z), 3.5, 0, Math.PI * 2);
+          c2.fill();
+          c2.strokeStyle = 'rgba(60,0,0,0.8)';
+          c2.lineWidth = 1;
+          c2.stroke();
+          return;
+        }
         var ic = m.kind === 'taxi' ? '🚕' : (m.kind === 'drop' ? '🏁' : '📦');
-        G.drawBadge(c2, wx(m.x), wz(m.z), ic, '#ffd23f', br, br * 1.25);
+        var rr = m.kind === 'drop' || m.kind === 'race' ? br : br * 0.72;
+        G.drawBadge(c2, wx(m.x), wz(m.z), ic, '#ffd23f', rr, rr * 1.25);
       });
     }
 

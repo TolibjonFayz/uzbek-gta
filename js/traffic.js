@@ -156,7 +156,7 @@ window.G = window.G || {};
   }
 
   G.initTraffic = function (scene) {
-    var count = G.IS_TOUCH ? 32 : 60;
+    var count = G.IS_TOUCH ? 44 : 84; // katta xarita — ko'proq mashina
     var roads = G.TRAFFIC_ROADS;
     for (var i = 0; i < count; i++) {
       var road = roads[i % roads.length];

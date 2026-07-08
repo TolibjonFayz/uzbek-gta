@@ -5,7 +5,7 @@ window.G = window.G || {};
 
 (function () {
   var RAIL_Z = 620;           // relslar chizig'i (world.js bilan mos)
-  var END = 1560;             // paydo bo'lish / yo'qolish chegarasi
+  var END = 2660;             // paydo bo'lish / yo'qolish chegarasi (yangi katta xarita)
   var PX1 = 235, PX2 = 365;   // platforma oralig'i (vokzal cx=300)
   var SPEED = 30, ACC = 5.5;  // m/s, m/s^2
   var BOARD_T = 16;           // bekatda turish (soniya)

@@ -1,6 +1,22 @@
-# TASHKENT CITY — Uzbek GTA 🇺🇿 (v3 PRO)
+# TASHKENT CITY — Uzbek GTA 🇺🇿 (v4 MEGA)
 
 Toshkent shahri bo'ylab erkin sayohat o'yini (three.js, brauzerda ishlaydi).
+
+## v4: MEGA XARITA — 5000×5000 m (~5 barobar katta!) 🗺️
+
+Yo'l tarmog'i endi **15×15** (yangi tashqi halqa ±2400 m). Hamma narsa xarita bo'ylab **tarqatilgan** — bir joyda to'planish yo'q:
+
+**YANGI O'ZBEKISTON TOMONI (sharq):**
+- 🕊️ **Yangi O'zbekiston bog'i** — ulkan park: Istiqlol ustuni (Humo qanotlari bilan), ko'l, gulzorlar, bayroq, xiyobonlar
+- 🥇 **Olimpiya shaharchasi** — katta olimpiya stadioni, ⛸️ **Muz saroyi**, olimpiya halqalari, basketbol maydoni, suzish havzasi + atrofida poyga trassasi ("Olimpiya ringi")
+- 🌆 **Yangi Shahar** — 5 ta baland shisha minora (70–124 m), zamonaviy biznes tuman; **Lux Motors avtosaloni endi shu yerda**
+
+**TARQATILGANLAR:**
+- 🏠 Mening uyim → g'arbiy dala hovlilar tomoniga ko'chdi (tinch joy)
+- 🏎️ 3 salon endi 3 tomonda: Lux (Yangi Shahar, sharq), Audi (Yunusobod, shimol), VW (Chilonzor, g'arb)
+- 🏁 4 poyga: Markaz aylanasi · Sergeli sprinti · **Katta halqa marafoni** (yangi tashqi halqa, ~9.6 km, 800 000 so'm!) · **Olimpiya ringi** (350 000)
+- ⭐ 25 yulduz butun 5 km xarita bo'ylab (14 tasi markazdan 1+ km uzoqda), yangi halqa burchaklarida ham
+- ⛽ 10 benzokolonka + 6 avto servis (yangi hududlarda ham), 72 oziq-ovqat do'koni
 
 ## Ishga tushirish
 
@@ -105,6 +121,20 @@ Ikkalasi ham xaritada joy nomi va minimapda ko'rinadi.
 - Manzilga yetganingizda marshrut o'zi yo'qoladi ("📍 Manzilga yetdingiz!")
 - **Missiya paytida** (yo'lovchi/quti olganda) manzilga **sariq marshrut** avtomatik chiziladi, topshirganda yo'qoladi
 - Minimap iconlari endi oq doirali badge ko'rinishida — aniq o'qiladi
+
+## Poyga missiyalari 🏁 (v2 — AI raqiblar bilan!)
+
+Endi har poygada **2 ta haqiqiy raqib** bor: **Bek** (qizil BMW M5) va **Timur** (ko'k Audi RS7). Ular start chizig'ida siz bilan turadi, KETDIK bilan birga chiqadi va yo'llar bo'ylab haydaydi. **G'alaba = marraga 1-bo'lib kelish!** Raqib oldin kelsa — yutqazasiz. HUD'da jonli o'rningiz: "O'rin: 1/3". Raqiblar minimapda qizil nuqta. Rezinka tizimi: juda o'zib ketsangiz ular tezlashadi, ortda qolsangiz kutib turishmaydi lekin sekinlashadi — poyga doim qiziq.
+
+Trassalar (xarita bo'ylab tarqatilgan): Markaz aylanasi (150k) · Sergeli sprinti — janubda (250k) · Olimpiya ringi — shimoli-sharqda (350k) · Katta halqa marafoni — tashqi halqa (800k).
+
+**v2 tuzatishlar:** checkpoint radiusi kattalashtirildi (asosiy yo'l chekka lane'sida o'tsangiz ham hisoblanadi), marra=start tsikli tuzatildi (poyga o'z-o'zidan qayta boshlanmaydi — zonadan chiqib qaytish kerak), start belgi ustunlari yo'l ichidan chetga olindi.
+
+Qo'shimcha: mashinadan tushsangiz poyga bekor · rekord vaqtlar saqlanadi ("YANGI REKORD!") · har g'alaba reytingga +300 ball · checkpoint sariq halqa + osmon nuri, keyingisiga to'q sariq marshrut chiziladi.
+
+## Xarita muvozanati 🗺️
+
+POI'lar butun xaritaga tarqatildi — har 3×3 zonada kamida bitta narsa: Minor masjidi shimoli-g'arbda, Bunyodkor janubi-g'arbda, Magic City janubi-sharqda, Mega Planet shimolda. Missiya takliflari (🚕/📦) endi doim **o'yinchiga yaqin** (250–850 m) paydo bo'ladi, manzillar 1.5 km dan uzoq bo'lmaydi.
 
 ## 3 ta Premium Avtosalon 🏎️
 

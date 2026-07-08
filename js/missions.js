@@ -51,24 +51,34 @@ window.G = window.G || {};
     return best || 'shahar';
   }
 
-  function roadPoint() {
-    var vertical = Math.random() < 0.5;
-    var roads = vertical ? G.ROADS.v : G.ROADS.h;
-    var road = G.pick(roads);
-    var along = G.rand(-G.MAP + 120, G.MAP - 120);
-    var side = Math.random() < 0.5 ? 1 : -1;
-    var off = road.halfW + 3;
-    var x, z;
-    if (vertical) { x = road.x + side * off; z = along; }
-    else { z = road.z + side * off; x = along; }
-    return { x: x, z: z, name: nearestName(x, z) };
+  // nearX/nearZ berilsa — o'yinchiga yetib boradigan masofada (250..850 m) tanlaydi
+  function roadPoint(nearX, nearZ) {
+    for (var t = 0; t < 30; t++) {
+      var vertical = Math.random() < 0.5;
+      var roads = vertical ? G.ROADS.v : G.ROADS.h;
+      var road = G.pick(roads);
+      var along = G.rand(-G.MAP + 120, G.MAP - 120);
+      var side = Math.random() < 0.5 ? 1 : -1;
+      var off = road.halfW + 3;
+      var x, z;
+      if (vertical) { x = road.x + side * off; z = along; }
+      else { z = road.z + side * off; x = along; }
+      if (nearX !== undefined) {
+        var d = Math.hypot(x - nearX, z - nearZ);
+        if (d < 250 || d > 850) continue; // juda yaqin ham, juda uzoq ham emas
+      }
+      return { x: x, z: z, name: nearestName(x, z) };
+    }
+    var fx2 = (nearX || 0) + 400;
+    return { x: fx2, z: nearZ || 0, name: nearestName(fx2, nearZ || 0) };
   }
 
+  // manzil: olish nuqtasidan minDist..1500 m oralig'ida (katta xaritada cheksiz uzoq bo'lmasin)
   function roadPointFar(fx, fz, minDist) {
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 25; i++) {
       var p = roadPoint();
       var d = Math.hypot(p.x - fx, p.z - fz);
-      if (d > minDist) { p.dist = d; return p; }
+      if (d > minDist && d < 1500) { p.dist = d; return p; }
     }
     var q = roadPoint(); q.dist = Math.hypot(q.x - fx, q.z - fz); return q;
   }
@@ -93,10 +103,10 @@ window.G = window.G || {};
     offers = [];
   }
 
-  function spawnOffers() {
+  function spawnOffers(px, pz) {
     clearOffers();
-    // TAKSI — kutayotgan yo'lovchi
-    var a = roadPoint();
+    // TAKSI — kutayotgan yo'lovchi (o'yinchiga yaqin joyda)
+    var a = roadPoint(px, pz);
     var taxiBeam = makeBeam(0xffd23f);
     taxiBeam.position.set(a.x, 0, a.z);
     scene.add(taxiBeam);
@@ -105,8 +115,8 @@ window.G = window.G || {};
     scene.add(person);
     offers.push({ kind: 'taxi', x: a.x, z: a.z, name: a.name, marker: taxiBeam, person: person });
 
-    // YETKAZISH — quti
-    var b = roadPoint();
+    // YETKAZISH — quti (o'yinchiga yaqin joyda)
+    var b = roadPoint(px, pz);
     var delBeam = makeBeam(0x3d8ec9);
     delBeam.position.set(b.x, 0, b.z);
     scene.add(delBeam);
@@ -157,7 +167,7 @@ window.G = window.G || {};
 
   G.initMissions = function (s) {
     scene = s;
-    spawnOffers();
+    spawnOffers(0, 0); // boshlanishda markaz atrofida
   };
 
   G.updateMissions = function (dt, mode, px, pz) {
@@ -193,7 +203,7 @@ window.G = window.G || {};
       if (mode === 'drive' && active.dist < 7) completeMission();
     } else if (state === 'respawn') {
       respawnT -= dt;
-      if (respawnT <= 0) spawnOffers();
+      if (respawnT <= 0) spawnOffers(px, pz);
     }
   };
 })();

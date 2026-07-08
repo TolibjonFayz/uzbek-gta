@@ -19,9 +19,9 @@ window.G = window.G || {};
   };
 
   var SALONS = [
-    { cx: 320, cz: 72, title: 'LUX MOTORS', sub: 'MERCEDES-BENZ · BMW', showcase: 'Mercedes G63',
+    { cx: 1650, cz: 870, title: 'LUX MOTORS', sub: 'MERCEDES-BENZ · BMW', showcase: 'Mercedes G63',
       lm: 'Avtosalon Lux', icon: '🏎️',
-      cars: ['Mercedes E200', 'Mercedes S500', 'Mercedes Maybach', 'Mercedes G63', 'BMW M5', 'BMW M8', 'BMW X7'] },
+      cars: ['Mercedes E200', 'Mercedes S500', 'Mercedes Maybach', 'Mercedes G63', 'BMW M5', 'BMW M8', 'BMW X7'] }, // Yangi Shaharda
     { cx: 320, cz: -672, title: 'AUDI MARKAZI', sub: 'RS · QUATTRO · PREMIUM', showcase: 'Audi R8',
       lm: 'Avtosalon Audi', icon: '🏎️',
       cars: ['Audi A6', 'Audi A8 L', 'Audi Q7', 'Audi RS7', 'Audi RS Q8', 'Audi R8'] },
@@ -30,7 +30,7 @@ window.G = window.G || {};
       cars: ['VW Polo', 'VW Jetta', 'VW Passat', 'VW Arteon', 'VW Tiguan', 'VW Touareg'] }
   ];
 
-  var HOUSE = { x: -300, z: -76 };
+  var HOUSE = { x: -1650, z: 75 }; // g'arbiy dala hovli — tinch joyda
   var GARAGE_CAP = 10;
 
   var scene = null;

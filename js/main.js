@@ -62,6 +62,7 @@
   if (G.initTrain) G.initTrain(scene);
   if (G.initSkid) G.initSkid(scene);
   if (G.initScore) G.initScore(scene);
+  if (G.initRace) G.initRace(scene);
 
   var state = {
     mode: 'foot',
@@ -463,6 +464,7 @@
     if (G.routes) {
       mmRoute(G.routes.waypoint, 'rgba(125,240,138,0.85)', 3);
       mmRoute(G.routes.mission, 'rgba(255,210,63,0.9)', 3.5);
+      mmRoute(G.routes.race, 'rgba(255,140,26,0.9)', 3.5);
     }
     // diqqatga sazovor joylar
     G.landmarks.forEach(function (L) {
@@ -515,7 +517,7 @@
       var dd = Math.hypot(mx, mz);
       var edge = false;
       if (dd > 68) { mx = mx / dd * 68; mz = mz / dd * 68; edge = true; }
-      mmCtx.fillStyle = m.kind === 'taxi' ? '#ffd23f' : (m.kind === 'drop' ? '#33e06a' : '#3d8ec9');
+      mmCtx.fillStyle = m.kind === 'taxi' ? '#ffd23f' : (m.kind === 'drop' ? '#33e06a' : (m.kind === 'race' ? '#ff8c1a' : (m.kind === 'rival' ? '#ff4444' : '#3d8ec9')));
       mmCtx.beginPath();
       mmCtx.arc(C + mx, C + mz, edge ? 3.5 : 5, 0, Math.PI * 2);
       mmCtx.fill();
@@ -908,10 +910,15 @@
 
     // missiyalar (taksi / yetkazish) + pul + energiya HUD
     G.updateMissions(dt, state.mode, px, pz);
+    if (G.updateRace) G.updateRace(dt, px, pz, state.mode);
     el.money.textContent = fmtSom(G.getMoney());
     energyFill.style.width = energy + '%';
+    var raceTxt = G.raceInfo ? G.raceInfo() : null;
     var mis = G.getActiveMission();
-    if (mis) {
+    if (raceTxt) {
+      el.missionBar.style.display = 'block';
+      el.missionBar.innerHTML = raceTxt;
+    } else if (mis) {
       el.missionBar.style.display = 'block';
       el.missionBar.innerHTML = (mis.kind === 'taxi' ? '🚕 Yo\'lovchi → ' : '📦 Yetkazish → ') +
         '<b>' + mis.dropName + '</b> — ' + Math.round(mis.dist) + ' m' +
