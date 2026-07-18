@@ -1,22 +1,45 @@
-HAQIQIY O'ZBEK QO'SHIQLARINI QO'SHISH
-======================================
+HAQIQIY QO'SHIQLARNI QO'SHISH
+==============================
 
-1-usul (eng oson):
-  O'zingizdagi MP3 fayllarni shu "music" papkasiga tashlang.
-  O'yin ularni avtomatik topib, radioda chaladi.
-  Fayl nomi qo'shiq nomi sifatida ko'rsatiladi,
-  masalan: "Yulduz Usmonova - Jonim.mp3"
+!!! ENG MUHIM QOIDA !!!
+Har bir qo'shiqni playlist.json ichidagi "tracks" ro'yxatiga YOZISH SHART.
 
-2-usul (aniq ro'yxat):
-  playlist.json faylini oching va tracks ichiga yozing:
+Nega? Chunki saytga joylashtirilganda (Netlify / Vercel / GitHub Pages)
+papka ichini avtomatik "ko'rish" imkoniyati YO'Q. Faqat kompyuteringizdagi
+lokal serverda ishlaydi. Ya'ni:
+  - playlist.json bo'sh bo'lsa -> lokalda MP3 chalinadi, saytda CHALINMAYDI!
+  - playlist.json to'ldirilgan bo'lsa -> hamma joyda ishlaydi.
+
+
+QANDAY QILISH (2 qadam)
+-----------------------
+1) MP3 faylni shu "music" papkasiga tashlang.
+
+2) playlist.json ni ochib, tracks ichiga yozing:
 
   {
     "tracks": [
-      { "title": "Sevara - Yol Bolsin", "file": "sevara-yol-bolsin.mp3" },
-      { "title": "Radio kuy", "file": "https://misol.uz/kuy.mp3" }
+      { "title": "Sevara - Yo'l bo'lsin", "file": "sevara.mp3" },
+      { "title": "Yulduz Usmonova - Jonim", "file": "jonim.mp3" },
+      { "title": "Internetdagi kuy", "file": "https://misol.uz/kuy.mp3" }
     ]
   }
 
-Eslatma: mualliflik huquqi tufayli o'yin bilan birga haqiqiy qo'shiq
-fayllari berilmaydi — o'zingizning qonuniy fayllaringizni ishlating.
-MP3 topilmasa, o'yin sintez qilingan xalq kuylarini chaladi.
+  - "file" = shu papkadagi fayl nomi (yoki to'liq https:// havola)
+  - "title" = o'yinda ko'rinadigan nom
+  - Fayl nomida bo'sh joy, kirill harflar, qavslar bo'lsa ham bo'ladi —
+    o'yin ularni o'zi to'g'ri kodlaydi.
+  - Vergullarga e'tibor bering: oxirgi qatordan keyin vergul QO'YILMAYDI.
+
+Tekshirish: o'yinni oching, mashinaga o'tiring — pastda qo'shiq nomi
+chiqishi kerak. M tugmasi keyingi qo'shiqqa o'tkazadi.
+
+
+MASLAHATLAR
+-----------
+- Fayl hajmiga e'tibor bering! Telegram Mini App'da telefon internetdan
+  yuklaydi. 7-8 MB qo'shiq sekin ochilishi mumkin — 3-4 MB (128 kbps)
+  qilib siqish tavsiya etiladi.
+- MP3 topilmasa yoki ro'yxat bo'sh bo'lsa, o'yin sintez qilingan
+  xalq kuylarini chaladi (o'yin baribir ishlaydi).
+- Mualliflik huquqi: o'z qonuniy fayllaringizni ishlating.

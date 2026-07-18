@@ -2,6 +2,27 @@
 
 Toshkent shahri bo'ylab erkin sayohat o'yini (three.js, brauzerda ishlaydi).
 
+## 📱 Telegram Mini App
+
+O'yin **Telegram Mini App** sifatida ishlaydi — o'zbek auditoriyasiga to'g'ridan-to'g'ri tarqaladi.
+
+**Ishga tushirilganda:**
+- To'liq ekran (fullscreen) + landshaft rejimga qulflanadi
+- **Haptika** — yulduz terganda, poyga yutganda/yutqazganda telefon tebranadi
+- **CloudStorage** — progress (pul, yulduzlar, mashinalar, rekordlar) Telegram hisobingizda saqlanadi: telefon almashsangiz ham hammasi joyida turadi (localStorage bilan birga)
+- Vertikal ushlab tursangiz — **"Telefonni yotiq holatga o'giring"** ekrani chiqadi (o'yin faqat landshaft)
+- Landshaft telefonlarda HUD ixcham rejimga o'tadi (kichik minimap, kichik yozuvlar)
+
+Oddiy brauzerda ochsangiz — Telegram funksiyalari xavfsiz o'chiq, o'yin odatdagidek ishlaydi.
+
+### Botga qanday ulash (deploy)
+1. Fayllarni statik hostga qo'ying (GitHub Pages, Netlify, Vercel, yoki oddiy `https` server) — HTTPS shart
+2. [@BotFather](https://t.me/BotFather) da bot yarating → **Bot Settings → Menu Button → Configure** → Mini App URL'ini kiriting (hosting manzili)
+3. Yoki `/newapp` bilan alohida Mini App yarating
+4. Foydalanuvchi botni ochib menyu tugmasini bosadi — o'yin ochiladi
+
+> Eslatma: `telegram-web-app.js` CDN'dan yuklanadi. Fullscreen/orientatsiya qulfi Telegram **8.0+** da to'liq ishlaydi; eski versiyalarda o'yin baribir ishlaydi, faqat qulf bo'lmaydi (o'girish ekrani yo'l ko'rsatadi).
+
 ## v4: MEGA XARITA — 5000×5000 m (~5 barobar katta!) 🗺️
 
 Yo'l tarmog'i endi **15×15** (yangi tashqi halqa ±2400 m). Hamma narsa xarita bo'ylab **tarqatilgan** — bir joyda to'planish yo'q:
@@ -27,9 +48,15 @@ Keyin brauzerda: `http://localhost:8347`
 
 ## Haqiqiy qo'shiqlar 🎵
 
-MP3 fayllaringizni **music/** papkasiga tashlang — radio ularni avtomatik topib chaladi.
-Aniq ro'yxat kerak bo'lsa `music/playlist.json` ni to'ldiring (`music/QOSHIQLAR-QANDAY-QOSHILADI.txt` ga qarang).
-MP3 yo'q bo'lsa sintez qilingan xalq kuylari chalinadi.
+MP3 fayllaringizni **music/** papkasiga tashlang **VA** `music/playlist.json` dagi `tracks` ro'yxatiga yozing:
+
+```json
+{ "tracks": [ { "title": "Sevara - Yo'l bo'lsin", "file": "sevara.mp3" } ] }
+```
+
+> ⚠️ **playlist.json ni to'ldirish SHART.** Papkani avtomatik skanerlash faqat lokal dev serverda ishlaydi — Netlify/Vercel/GitHub Pages'da papka ro'yxati yo'q, shuning uchun ro'yxat bo'sh bo'lsa saytda musiqa **chalinmaydi** (sintez kuyga tushib qoladi). Batafsil: `music/QOSHIQLAR-QANDAY-QOSHILADI.txt`
+
+Fayl nomida bo'sh joy/kirill/qavslar bo'lsa ham bo'ladi — o'yin URL'ni o'zi to'g'ri kodlaydi. MP3 yo'q bo'lsa sintez qilingan xalq kuylari chalinadi.
 
 ## Boshqaruv
 

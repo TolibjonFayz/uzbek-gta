@@ -62,7 +62,9 @@ window.G = window.G || {};
   function save() {
     try {
       if (G.getMoney) stats.money = G.getMoney(); // pul ham saqlanadi
-      localStorage.setItem(LS_KEY, JSON.stringify(stats));
+      var payload = JSON.stringify(stats);
+      localStorage.setItem(LS_KEY, payload);
+      if (G.tgCloudSave) G.tgCloudSave(LS_KEY, payload); // Telegram hisobiga ham
     } catch (e) {}
   }
   function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
@@ -178,6 +180,7 @@ window.G = window.G || {};
         G.addMoney(25000);
         stats.earned += 25000;
         if (G.sfx && G.sfx.ding) G.sfx.ding();
+        if (G.tgHaptic) G.tgHaptic('success');
         var n = stats.stars.length;
         if (G.showToast) G.showToast('⭐ Yulduz! ' + n + '/' + STAR_SPOTS.length + " (+25 000 so'm)", '#ffd23f');
         if (n === STAR_SPOTS.length) {

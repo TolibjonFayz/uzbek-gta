@@ -1,4 +1,9 @@
 {
-  "readme": "Haqiqiy qo'shiqlar uchun: MP3 fayllarni shu papkaga tashlang — o'yin ularni avtomatik topadi. Yoki quyidagi tracks ro'yxatini to'ldiring: file = fayl nomi (shu papkada) yoki to'g'ridan-to'g'ri https:// havola. Misol: {\"title\": \"Yulduz Usmonova - Jonim\", \"file\": \"jonim.mp3\"}",
-  "tracks": []
+  "readme": "MUHIM: deploy qilinganda (Netlify/Vercel/GitHub Pages) papka ro'yxati ishlamaydi — shuning uchun har bir qo'shiqni shu tracks ro'yxatiga QO'SHISH SHART. file = shu papkadagi fayl nomi (xohlagancha bo'sh joy/kirill bo'lishi mumkin, o'yin o'zi kodlaydi) yoki to'g'ridan-to'g'ri https:// havola.",
+  "tracks": [
+    {
+      "title": "HammAli & Navai — Прятки",
+      "file": "HammAli   Navai - Прятки (minus 2)   HammAli   Navai.mp3"
+    }
+  ]
 }

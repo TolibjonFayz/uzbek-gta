@@ -976,6 +976,7 @@
   // ---------- BOSHLASH ----------
   document.getElementById('startBtn').addEventListener('click', function () {
     G.unlockAudio();
+    if (G.tgStart) G.tgStart(); // Telegram: fullscreen + landshaft qulfi
     document.getElementById('startScreen').style.display = 'none';
     started = true;
     updateHudMode();

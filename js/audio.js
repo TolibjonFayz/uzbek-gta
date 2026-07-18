@@ -66,21 +66,26 @@ window.G = window.G || {};
     _gain: null,
 
     // MP3 ro'yxatini yuklash (o'yin boshida chaqiriladi)
+    // MUHIM: deployда (Netlify/Vercel/GitHub Pages) papka ro'yxati YO'Q —
+    // shuning uchun asosiy manba playlist.json bo'lishi shart.
     init: function () {
       var self = this;
-      // 1) music/playlist.json
+      // 1) music/playlist.json — hamma joyda ishlaydi
       fetch('music/playlist.json').then(function (r) {
         if (!r.ok) throw 0;
         return r.json();
       }).then(function (j) {
         var list = (j && j.tracks) || [];
         var ok = list.filter(function (t) { return t && t.file; }).map(function (t) {
-          return { title: t.title || cleanName(t.file), url: /^https?:/.test(t.file) ? t.file : 'music/' + t.file };
+          return {
+            title: t.title || cleanName(t.file),
+            url: /^https?:/.test(t.file) ? t.file : 'music/' + encPath(t.file)
+          };
         });
         if (ok.length) { self.tracks = ok; }
         else throw 0;
       }).catch(function () {
-        // 2) music/ papka ro'yxati (python http.server listing)
+        // 2) zaxira: papka ro'yxati (faqat lokal dev serverda — http-server/python)
         fetch('music/').then(function (r) {
           if (!r.ok) throw 0;
           return r.text();
@@ -89,7 +94,8 @@ window.G = window.G || {};
           var re = /href="([^"]+\.(mp3|ogg|m4a|wav))"/gi;
           var m;
           while ((m = re.exec(html))) {
-            found.push({ title: cleanName(m[1]), url: 'music/' + m[1] });
+            var f = m[1].replace(/^\.?\//, ''); // "./" prefiksini olib tashlaymiz
+            found.push({ title: cleanName(f), url: 'music/' + encPath(f) });
           }
           if (found.length) self.tracks = found;
         }).catch(function () {});
@@ -234,6 +240,16 @@ window.G = window.G || {};
   function cleanName(f) {
     try { f = decodeURIComponent(f); } catch (e) {}
     return f.replace(/\.[a-z0-9]+$/i, '').replace(/[_\-]+/g, ' ').trim();
+  }
+
+  // Fayl yo'lini URL uchun xavfsiz qiladi (bo'sh joy, kirill, qavslar).
+  // Allaqachon kodlangan bo'lagni qayta kodlamaydi.
+  function encPath(p) {
+    return String(p).split('/').map(function (seg) {
+      if (!seg) return seg;
+      try { if (decodeURIComponent(seg) !== seg) return seg; } catch (e) { return seg; }
+      return encodeURIComponent(seg);
+    }).join('/');
   }
 
   // ---------- MOTOR OVOZI (qatlamli, realistik) ----------

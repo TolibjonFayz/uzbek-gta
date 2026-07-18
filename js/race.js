@@ -185,6 +185,7 @@ window.G = window.G || {};
     clearRivals();
     if (G.routes) G.routes.race = null;
     if (G.showToast) G.showToast(msg, color);
+    if (G.tgHaptic) G.tgHaptic(color === '#5be07a' ? 'success' : 'warning');
   }
 
   G.initRace = function (s) {
