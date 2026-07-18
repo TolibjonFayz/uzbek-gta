@@ -10,8 +10,8 @@
   #c { display:block; width:100%; height:100%; }
 
   /* ======================================================
-     KIRISH EKRANI — O'ZBEKONA (Samarqand kechasi)
-     Girih naqsh + atlas mato + Registon silueti + peshtoq
+     KIRISH EKRANI — O'ZBEKONA (Toshkent kechasi)
+     Suzani gul naqsh + atlas mato + Teleminora silueti + paxta
      ====================================================== */
   #startScreen {
     position:fixed; inset:0; z-index:100; display:flex;
@@ -41,20 +41,29 @@
   }
   @keyframes ssTwinkle { 0%,100%{opacity:.75} 50%{opacity:1} }
 
-  /* --- girih: 8 burchakli yulduz naqshi (islomiy geometriya) --- */
-  .ss-girih {
-    position:absolute; inset:-60px; pointer-events:none; opacity:.16;
+  /* --- suzani: guldor kashta naqshi (dunyoviy o'zbek bezagi) --- */
+  .ss-suzani {
+    position:absolute; inset:-72px; pointer-events:none; opacity:.14;
     background-image:url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'>\
-<g fill='none' stroke='%237fd0e8' stroke-width='1.1'>\
-<path d='M16 16 H48 V48 H16 Z'/>\
-<path d='M32 9.4 L54.6 32 L32 54.6 L9.4 32 Z'/>\
-<circle cx='32' cy='32' r='3'/>\
+<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'>\
+<g fill='none' stroke='%23f2b705' stroke-width='1.2'>\
+<circle cx='36' cy='36' r='8'/>\
+<circle cx='36' cy='36' r='3.2'/>\
+<path d='M36 28 V16 M36 44 V56 M28 36 H16 M44 36 H56'/>\
+<path d='M30 30 L20 20 M42 30 L52 20 M30 42 L20 52 M42 42 L52 52'/>\
+</g>\
+<g fill='%237fd0e8'>\
+<circle cx='36' cy='14' r='2.4'/><circle cx='36' cy='58' r='2.4'/>\
+<circle cx='14' cy='36' r='2.4'/><circle cx='58' cy='36' r='2.4'/>\
+</g>\
+<g fill='none' stroke='%237fd0e8' stroke-width='1'>\
+<circle cx='0' cy='0' r='6'/><circle cx='72' cy='0' r='6'/>\
+<circle cx='0' cy='72' r='6'/><circle cx='72' cy='72' r='6'/>\
 </g></svg>");
-    background-size:64px 64px;
-    animation:ssDrift 60s linear infinite;
+    background-size:72px 72px;
+    animation:ssDrift 70s linear infinite;
   }
-  @keyframes ssDrift { from{transform:translate(0,0)} to{transform:translate(64px,64px)} }
+  @keyframes ssDrift { from{transform:translate(0,0)} to{transform:translate(72px,72px)} }
 
   /* --- ATLAS (adras) matosi: chap va o'ng chekkalarda --- */
   .ss-atlas {
@@ -77,48 +86,75 @@
   .ss-atlas-r { right:0; box-shadow:-14px 0 34px rgba(0,0,0,.55); }
   @keyframes ssAtlas { from{background-position-y:0} to{background-position-y:-480px} }
 
-  /* --- REGISTON silueti: gumbazlar + minoralar --- */
+  /* --- TOSHKENT silueti: Teleminora + zamonaviy minoralar --- */
   .ss-skyline {
-    position:absolute; left:0; right:0; bottom:0; height:clamp(90px,26vh,230px);
-    display:flex; align-items:flex-end; justify-content:center; gap:clamp(8px,3vw,44px);
-    pointer-events:none; filter:drop-shadow(0 0 26px rgba(46,168,165,.4));
+    position:absolute; left:0; right:0; bottom:0; height:clamp(96px,28vh,250px);
+    display:flex; align-items:flex-end; justify-content:center; gap:clamp(10px,3.4vw,52px);
+    pointer-events:none; filter:drop-shadow(0 0 26px rgba(46,168,165,.35));
   }
-  .ss-dome { position:relative; }
-  .ss-dome i {
-    display:block;
-    background:linear-gradient(175deg,#7fe6de 0%,#2ea8a5 42%,#166b6a 100%);
-    border-radius:50% 50% 10% 10% / 66% 66% 6% 6%;
-    box-shadow:inset 0 -10px 22px rgba(0,0,0,.35);
+  /* zamonaviy shisha minoralar (Tashkent City / Yangi Shahar) */
+  .ss-tower {
+    position:relative; width:clamp(26px,6vw,54px);
+    background:linear-gradient(180deg,#20527a 0%,#153a5c 60%,#0e2846 100%);
+    border-radius:5px 5px 0 0;
+    box-shadow:inset 0 0 0 1px rgba(127,208,232,.22);
   }
-  /* gumbaz ustidagi oltin nayza */
-  .ss-dome::before {
-    content:''; position:absolute; left:50%; transform:translateX(-50%);
-    width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent;
-    border-bottom:16px solid #f2b705;
-    filter:drop-shadow(0 0 7px rgba(242,183,5,.95));
+  /* deraza chiziqlari */
+  .ss-tower::before {
+    content:''; position:absolute; inset:6px 5px 0;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(127,208,232,.18) 0 2px, transparent 2px 9px),
+      repeating-linear-gradient(0deg, rgba(127,208,232,.14) 0 2px, transparent 2px 11px);
   }
-  .ss-dome-big i { width:clamp(80px,20vw,170px); height:clamp(64px,16vw,140px); }
-  .ss-dome-big::before { top:clamp(-18px,-4vw,-14px); }
-  .ss-dome-big u {  /* baraban (gumbaz osti) */
-    display:block; margin:0 auto; width:72%; height:clamp(20px,5vw,42px);
-    background:linear-gradient(180deg,#1d5f7e,#123a5c);
-    border-top:2px solid rgba(242,183,5,.55);
+  /* tepasidagi kichik yorug' nuqta */
+  .ss-tower::after {
+    content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background:#ff5252;
+    box-shadow:0 0 8px rgba(255,82,82,.9);
   }
-  .ss-dome-sm i { width:clamp(44px,11vw,92px); height:clamp(34px,8.5vw,72px); }
-  .ss-dome-sm::before { top:-13px; }
-  .ss-minor { position:relative; display:flex; flex-direction:column; align-items:center; }
-  .ss-minor i {
-    display:block; width:clamp(13px,3.2vw,26px); height:clamp(74px,20vh,190px);
-    background:linear-gradient(90deg,#123a5c,#2a6b8f 45%,#123a5c);
-    border-radius:4px 4px 0 0;
-    box-shadow:inset 0 0 0 1px rgba(242,183,5,.22);
+  .ss-tw1 { height:clamp(70px,17vh,168px); }
+  .ss-tw2 { height:clamp(100px,25vh,232px); }
+  .ss-tw3 { height:clamp(112px,27vh,248px); }
+  .ss-tw4 { height:clamp(64px,15vh,150px); }
+
+  /* Toshkent Teleminorasi (markazda, eng baland) */
+  .ss-tv {
+    position:relative; width:clamp(30px,7vw,60px);
+    height:clamp(150px,36vh,330px);
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
   }
-  .ss-minor b {  /* minora cho'qqisi */
-    position:absolute; top:clamp(-16px,-3vw,-12px);
-    width:clamp(19px,4.4vw,36px); height:clamp(14px,3.4vw,26px);
-    background:linear-gradient(175deg,#7fe6de,#2ea8a5);
-    border-radius:50% 50% 12% 12% / 68% 68% 8% 8%;
+  .ss-tv-legs {  /* 3 oyoqli asos (trapetsiya) */
+    width:100%; height:26%;
+    background:linear-gradient(180deg,#e8e8ea,#b8bcc0);
+    clip-path:polygon(30% 0, 70% 0, 100% 100%, 0 100%);
   }
+  .ss-tv-shaft {  /* asosiy ustun */
+    width:22%; height:52%;
+    background:linear-gradient(90deg,#c9ccd0,#f2f2f4 45%,#c9ccd0);
+    margin-top:-1px;
+  }
+  .ss-tv-pod {  /* qizil pod (kuzatuv maydonchasi) */
+    position:absolute; top:26%; width:60%; height:8%;
+    background:linear-gradient(180deg,#e04a3a,#b1281c);
+    border-radius:50%/70%;
+    box-shadow:0 0 14px rgba(224,74,58,.5);
+  }
+  .ss-tv-pod2 {  /* oq halqa pod */
+    position:absolute; top:20%; width:44%; height:5.5%;
+    background:linear-gradient(180deg,#f2f2f4,#c9ccd0);
+    border-radius:50%/60%;
+  }
+  .ss-tv-ant {  /* antenna nayza */
+    position:absolute; top:-1%; width:5%; height:24%;
+    background:linear-gradient(180deg,#e04a3a,#8a1a12);
+  }
+  .ss-tv-ant::after {  /* uchidagi qizil chirog' */
+    content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:5px; height:5px; border-radius:50%; background:#ff5252;
+    box-shadow:0 0 10px rgba(255,82,82,1);
+    animation:ssBlink 1.4s steps(1) infinite;
+  }
+  @keyframes ssBlink { 0%,60%{opacity:1} 61%,100%{opacity:.2} }
 
   /* --- markaziy kontent --- */
   .ss-content {
@@ -135,28 +171,43 @@
     pointer-events:none;
   }
 
-  /* --- PESHTOQ: madrasa darvozasi ramkasi --- */
-  .ss-arch {
+  /* --- ATLAS NAQSHLI RAMKA (sarlavha uchun) --- */
+  .ss-frame {
     position:relative;
-    padding:clamp(16px,3vh,34px) clamp(24px,5vw,58px) clamp(12px,2vh,22px);
-    border:2px solid rgba(242,183,5,.5);
-    border-radius:clamp(70px,16vw,150px) clamp(70px,16vw,150px) 10px 10px;
-    background:
-      linear-gradient(180deg, rgba(10,22,54,.82), rgba(8,16,40,.62));
-    box-shadow:
-      0 0 0 5px rgba(46,168,165,.16),
-      0 0 44px rgba(46,168,165,.28),
-      inset 0 0 34px rgba(46,168,165,.12);
+    padding:clamp(14px,2.6vh,28px) clamp(24px,5vw,58px) clamp(12px,2vh,22px);
+    border-radius:14px;
+    background:linear-gradient(180deg, rgba(10,22,54,.78), rgba(8,16,40,.58));
+    box-shadow:0 0 40px rgba(46,168,165,.22), inset 0 0 28px rgba(46,168,165,.1);
     backdrop-filter:blur(2px);
   }
-  /* ichki nozik chiziq */
-  .ss-arch-in {
-    border:1px solid rgba(127,208,232,.24);
-    border-radius:clamp(60px,14vw,132px) clamp(60px,14vw,132px) 6px 6px;
-    padding:clamp(10px,2vh,20px) clamp(14px,3vw,30px) clamp(8px,1.4vh,14px);
+  /* atlas rangli ramka chizig'i (gradient border) */
+  .ss-frame::before {
+    content:''; position:absolute; inset:0; border-radius:14px; padding:2px;
+    background:linear-gradient(120deg,#d42a2a,#f2b705 25%,#1eb53a 50%,#0099b5 75%,#d42a2a);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    opacity:.8; pointer-events:none;
   }
-  .ss-orn { color:#f2b705; opacity:.85; line-height:1; }
-  .ss-orn-t { font-size:clamp(17px,3.6vw,30px); margin-bottom:clamp(2px,.8vh,8px); text-shadow:0 0 14px rgba(242,183,5,.75); }
+  .ss-frame-in {
+    position:relative;
+    padding:clamp(8px,1.5vh,16px) clamp(10px,2.4vw,24px) clamp(6px,1vh,12px);
+  }
+  /* burchak bezaklari (naqsh nuqtalari) */
+  .ss-cor {
+    position:absolute; width:12px; height:12px; pointer-events:none;
+    border:2px solid #f2b705; opacity:.7;
+  }
+  .ss-cor-tl { top:5px; left:5px; border-right:0; border-bottom:0; }
+  .ss-cor-tr { top:5px; right:5px; border-left:0; border-bottom:0; }
+  .ss-cor-bl { bottom:5px; left:5px; border-right:0; border-top:0; }
+  .ss-cor-br { bottom:5px; right:5px; border-left:0; border-top:0; }
+
+  /* paxta gullari (dunyoviy o'zbek ramzi) */
+  .ss-cotton {
+    display:block; width:clamp(100px,26vw,150px); height:auto;
+    margin:0 auto clamp(4px,1vh,10px);
+    filter:drop-shadow(0 0 6px rgba(242,183,5,.4));
+  }
 
   #startScreen h1 {
     font-size:clamp(29px,7.6vw,74px); font-weight:900; letter-spacing:clamp(2px,.7vw,7px);
@@ -219,16 +270,16 @@
   /* --- landshaft telefon: ixchamlashtirish --- */
   @media (max-height:500px) {
     .ss-content { gap:5px; padding:0 clamp(30px,8vw,70px); }
-    .ss-arch { padding:8px 26px 6px; border-radius:60px 60px 8px 8px; }
-    .ss-arch-in { padding:4px 12px 2px; border-radius:52px 52px 5px 5px; }
-    .ss-orn-t { font-size:15px; margin-bottom:0; }
+    .ss-frame { padding:8px 26px 6px; }
+    .ss-frame-in { padding:4px 12px 2px; }
+    .ss-cotton { width:clamp(80px,20vw,110px); margin-bottom:2px; }
     #startScreen h1 { font-size:clamp(24px,5.4vh,40px); }
-    .ss-flagline { margin:4px auto 2px; height:3px; }
+    .ss-flagline { margin:4px auto 2px; }
     .ss-flagline i { height:3px; }
     #startScreen p.sub { display:none; }
     #startBtn { padding:9px 34px; font-size:16px; }
     #startScreen .keys { font-size:9px; line-height:1.6; }
-    .ss-skyline { height:clamp(60px,20vh,110px); opacity:.8; }
+    .ss-skyline { height:clamp(60px,20vh,120px); opacity:.75; }
   }
 
   /* ---------- HUD ---------- */
@@ -451,26 +502,46 @@
 <canvas id="c"></canvas>
 
 <div id="startScreen">
-  <!-- Samarqand kechasi: yulduzlar + girih naqsh + atlas chetlar -->
+  <!-- Toshkent kechasi: yulduzlar + suzani gul naqshi + atlas chetlar -->
   <div class="ss-stars"></div>
-  <div class="ss-girih"></div>
+  <div class="ss-suzani"></div>
   <div class="ss-atlas ss-atlas-l"></div>
   <div class="ss-atlas ss-atlas-r"></div>
 
-  <!-- Registon silueti: gumbazlar va minoralar -->
+  <!-- Toshkent silueti: Teleminora + zamonaviy minoralar -->
   <div class="ss-skyline">
-    <div class="ss-minor ss-minor-l"><i></i><b></b></div>
-    <div class="ss-dome ss-dome-sm ss-dome-l"><i></i></div>
-    <div class="ss-dome ss-dome-big"><i></i><u></u></div>
-    <div class="ss-dome ss-dome-sm ss-dome-r"><i></i></div>
-    <div class="ss-minor ss-minor-r"><i></i><b></b></div>
+    <div class="ss-tower ss-tw1"></div>
+    <div class="ss-tower ss-tw2"></div>
+    <div class="ss-tv">
+      <span class="ss-tv-ant"></span>
+      <span class="ss-tv-pod2"></span>
+      <span class="ss-tv-pod"></span>
+      <span class="ss-tv-shaft"></span>
+      <span class="ss-tv-legs"></span>
+    </div>
+    <div class="ss-tower ss-tw3"></div>
+    <div class="ss-tower ss-tw4"></div>
   </div>
 
   <div class="ss-content">
-    <!-- Peshtoq (madrasa darvozasi) ichida sarlavha -->
-    <div class="ss-arch">
-      <div class="ss-arch-in">
-        <div class="ss-orn ss-orn-t">۞</div>
+    <!-- Atlas naqshli ramka ichida sarlavha -->
+    <div class="ss-frame">
+      <i class="ss-cor ss-cor-tl"></i><i class="ss-cor ss-cor-tr"></i>
+      <i class="ss-cor ss-cor-bl"></i><i class="ss-cor ss-cor-br"></i>
+      <div class="ss-frame-in">
+        <!-- paxta gullari (dunyoviy o'zbek ramzi) -->
+        <svg class="ss-cotton" viewBox="0 0 120 26" aria-hidden="true">
+          <g fill="none" stroke="#f2b705" stroke-width="1.6" stroke-linecap="round">
+            <path d="M18 13 H46 M74 13 H102"/>
+          </g>
+          <g fill="#f2f4f2" stroke="#d9b25a" stroke-width="1.1">
+            <ellipse cx="60" cy="8" rx="5" ry="6.5"/>
+            <ellipse cx="53" cy="15" rx="6.5" ry="5"/>
+            <ellipse cx="67" cy="15" rx="6.5" ry="5"/>
+            <ellipse cx="60" cy="19" rx="5" ry="5.5"/>
+          </g>
+          <circle cx="60" cy="14" r="2.2" fill="#8a6a2a"/>
+        </svg>
         <h1>TOSHKENT <span>CITY</span></h1>
         <div class="ss-flagline"><i></i><i></i><i></i></div>
         <p class="ss-tag">O'ZBEKONA OCHIQ DUNYO</p>
