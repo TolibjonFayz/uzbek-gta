@@ -1,9 +1,133 @@
 {
-  "readme": "MUHIM: deploy qilinganda (Netlify/Vercel/GitHub Pages) papka ro'yxati ishlamaydi — shuning uchun har bir qo'shiqni shu tracks ro'yxatiga QO'SHISH SHART. file = shu papkadagi fayl nomi (xohlagancha bo'sh joy/kirill bo'lishi mumkin, o'yin o'zi kodlaydi) yoki to'g'ridan-to'g'ri https:// havola.",
+  "readme": "MUHIM: deploy qilinganda (Netlify/Vercel/GitHub Pages) papka ro'yxati ishlamaydi ? shuning uchun har bir qo'shiqni shu tracks ro'yxatiga QO'SHISH SHART. file = shu papkadagi fayl nomi (xohlagancha bo'sh joy/kirill bo'lishi mumkin, o'yin o'zi kodlaydi) yoki to'g'ridan-to'g'ri https:// havola.",
   "tracks": [
     {
-      "title": "HammAli & Navai — Прятки",
+      "title": "'City of Stars' Duet ft Ryan Gosling, Emma Stone La La Land Original",
+      "file": "'City_of_Stars'_Duet_ft_Ryan_Gosling,_Emma_Stone_La_La_Land_Original.mp3"
+    },
+    {
+      "title": "140. d OdqErMsc",
+      "file": "140._d_OdqErMsc.mp3"
+    },
+    {
+      "title": "Andrew Garfield Original Clip 4K60fps Kali Uchis Moonlight I just",
+      "file": "Andrew_Garfield_Original_Clip_4K60fps___Kali_Uchis_Moonlight_I_just.mp3"
+    },
+    {
+      "title": "Arcane - Handclap「AMV」",
+      "file": "Arcane - Handclap「AMV」.mp3"
+    },
+    {
+      "title": "Bon Iver & St. Vincent - Roslyn (Lyrics)",
+      "file": "Bon Iver & St. Vincent - Roslyn (Lyrics).mp3"
+    },
+    {
+      "title": "Cardigan (TikTok Best Part)",
+      "file": "Cardigan (TikTok Best Part).mp3"
+    },
+    {
+      "title": "Childish Gambino L E S instrumental best part + slowed reverb",
+      "file": "Childish_Gambino_L_E_S_instrumental___best_part_+_slowed_reverb.mp3"
+    },
+    {
+      "title": "Empire Of The Sun We Are The People best part looped + slowed +",
+      "file": "Empire_Of_The_Sun_We_Are_The_People_best_part_looped_+_slowed_+.mp3"
+    },
+    {
+      "title": "Fleetwood Mac - The Chain (Official Audio)",
+      "file": "Fleetwood Mac - The Chain (Official Audio).mp3"
+    },
+    {
+      "title": "G'aybulla Tursunov - Quralay (Konsert Version 2025)",
+      "file": "G'aybulla Tursunov - Quralay (Konsert Version 2025).mp3"
+    },
+    {
+      "title": "HammAli Navai - Прятки (minus 2) HammAli Navai",
       "file": "HammAli   Navai - Прятки (minus 2)   HammAli   Navai.mp3"
+    },
+    {
+      "title": "Harry Styles - Sign of the Times (Official Video)",
+      "file": "Harry Styles - Sign of the Times (Official Video).mp3"
+    },
+    {
+      "title": "I Just Got My License Back!",
+      "file": "I Just Got My License Back!.mp3"
+    },
+    {
+      "title": "JONY - Небесные розы",
+      "file": "JONY - Небесные розы.mp3"
+    },
+    {
+      "title": "John Newman - Love Me Again",
+      "file": "John Newman - Love Me Again.mp3"
+    },
+    {
+      "title": "Let It Happen (best part) (slowed+pitched down)-Tame Impala",
+      "file": "Let It Happen (best part) (slowed+pitched down)-Tame Impala.mp3"
+    },
+    {
+      "title": "Narvent - Fainted (Slowed 4K Music Video)",
+      "file": "Narvent - Fainted (Slowed _ 4K Music Video).mp3"
+    },
+    {
+      "title": "OneRepublic I Ain’t Worried From “Top Gun Maverick” Official Music",
+      "file": "OneRepublic_I_Ain’t_Worried_From_“Top_Gun__Maverick”_Official_Music.mp3"
+    },
+    {
+      "title": "Tame Impala - Borderline (Official Audio)",
+      "file": "Tame Impala - Borderline (Official Audio).mp3"
+    },
+    {
+      "title": "Tame Impala, JENNIE Dracula JENNIE Remix 🦇 slowed & reverb",
+      "file": "Tame_Impala,_JENNIE_Dracula_JENNIE_Remix_🦇_slowed_&_reverb.mp3"
+    },
+    {
+      "title": "The Irrepressibles - In This Shirt (lyrics)",
+      "file": "The Irrepressibles - In This Shirt (lyrics).mp3"
+    },
+    {
+      "title": "Thunderbolts trailer song where is my mind Epic Version credit",
+      "file": "Thunderbolts__trailer_song_where_is_my_mind_Epic_Version_credit.mp3"
+    },
+    {
+      "title": "VXLLAIN, iGRES, ENXK - Crystal Skies (Sped Up)",
+      "file": "VXLLAIN, iGRES, ENXK - Crystal Skies (Sped Up).mp3"
+    },
+    {
+      "title": "Videoclub-Roi ( ultra slowed)",
+      "file": "Videoclub-Roi ( ultra slowed).mp3"
+    },
+    {
+      "title": "Wash - Bon Iver Gran Turismo Soundtrack",
+      "file": "Wash - Bon Iver _ Gran Turismo Soundtrack.mp3"
+    },
+    {
+      "title": "We Are The People Slowed + Best Part (tiktok version)",
+      "file": "We Are The People  Slowed + Best Part (tiktok version).mp3"
+    },
+    {
+      "title": "d4vd - Feel It Spider-Verse",
+      "file": "d4vd - Feel It _ Spider-Verse.mp3"
+    },
+    {
+      "title": "harry styles - as it was slowed + reverb",
+      "file": "harry styles - as it was  slowed + reverb.mp3"
+    },
+    {
+      "title": "tame impala - borderline ﾉ slowed ﾉ",
+      "file": "tame impala - borderline ﾉ slowed ﾉ.mp3"
+    },
+    {
+      "title": "tame impala new person, same old mistakes ﾉ slowed + reverb ﾉ",
+      "file": "tame_impala_new_person,_same_old_mistakes_ﾉ_slowed_+_reverb_ﾉ.mp3"
+    },
+    {
+      "title": "the neighbourhood - softcore slowed + reverb",
+      "file": "the neighbourhood - softcore  slowed + reverb.mp3"
+    },
+    {
+      "title": "Ёлка Моревнутри OST Без границ",
+      "file": "Ёлка_Моревнутри_OST__Без_границ_.mp3"
     }
   ]
 }
