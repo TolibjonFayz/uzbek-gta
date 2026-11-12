@@ -78,11 +78,60 @@ window.G = window.G || {};
       g.add(doppi);
     }
 
+    // 3D rejim: haqiqiy odam modeli (models.js). Bo'laklar shu pivotlarga qo'yiladi, shuning uchun
+    // yurish/musht/yiqilish animatsiyalari o'zgarmaydi. Uzoqda — yengil odamcha (LOD).
+    var hiModel = G.peopleModel ? G.peopleModel(female) : null;
+    if (hiModel) {
+      var lo = [];
+      g.traverse(function (o) { if (o.isMesh) lo.push(o); });
+      var hi = [];
+      ['legL', 'legR', 'armL', 'armR'].forEach(function (k) {
+        var pv = hiModel.pivots[k];
+        parts[k].position.set(pv[0], pv[1], pv[2]);
+        var m = new THREE.Mesh(hiModel.geos[k], hiModel.mat);
+        parts[k].add(m);
+        hi.push(m);
+      });
+      var body = new THREE.Mesh(hiModel.geos.body, hiModel.mat);
+      g.add(body);
+      hi.push(body);
+      g.userData.lod = { hi: hi, lo: lo, on: null };
+      setLod(g, true);
+      humans.push(g);
+    }
+
     g.scale.setScalar(h);
     g.traverse(function (o) { if (o.isMesh) o.castShadow = true; });
     g.userData.parts = parts;
     return g;
   };
+
+  // ---------- ODAMLAR LOD: yaqinda 3D model, uzoqda yengil odamcha ----------
+  var humans = [];
+  function setLod(g, near) {
+    var l = g.userData.lod;
+    if (l.on === near) return;
+    l.on = near;
+    for (var i = 0; i < l.hi.length; i++) l.hi[i].visible = near;
+    for (var j = 0; j < l.lo.length; j++) l.lo[j].visible = !near;
+  }
+  var LOD_DIST = G.IS_TOUCH ? 32 : 45;
+  var lodT = 0;
+  if (G.animated) G.animated.push({ fn: function (dt) {
+    lodT -= dt;
+    if (lodT > 0 || !humans.length) return;
+    lodT = 0.25;
+    var cam = G.debug && G.debug.camera;
+    if (!cam) return;
+    var cp = cam.position, wp = new THREE.Vector3();
+    for (var i = humans.length - 1; i >= 0; i--) {
+      var g = humans[i];
+      if (!g.parent) continue;
+      g.getWorldPosition(wp);
+      var dx = wp.x - cp.x, dz = wp.z - cp.z;
+      setLod(g, dx * dx + dz * dz < LOD_DIST * LOD_DIST);
+    }
+  } });
 
   function poseSit(human) {
     var p = human.userData.parts;

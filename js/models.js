@@ -98,6 +98,43 @@ window.G = window.G || {};
     });
   }
 
+  // ---------- ODAMLAR (Quaternius Ultimate Modular Men/Women, CC0) ----------
+  // tools/pack-people.js: har odam 5 bo'lak (body, legL, legR, armL, armR) + pivot nuqtalari.
+  // peds.js G.makeHuman bo'laklarni o'z pivotlariga qo'yadi -> eski animatsiyalar o'zgarmay ishlaydi.
+  var PEOPLE = [];
+  var peopleMat = null;
+  function parsePeople(buf) {
+    var dv = new DataView(buf);
+    var hlen = dv.getUint32(0, true);
+    var header = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, hlen)));
+    var base = 4 + hlen;
+    peopleMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    header.people.forEach(function (pp) {
+      var geos = {};
+      Object.keys(pp.parts).forEach(function (k) {
+        var d = pp.parts[k];
+        var qp = new Int16Array(buf, base + d.pos, d.n * 3), qn = new Int8Array(buf, base + d.nrm, d.n * 3);
+        var pos = new Float32Array(d.n * 3), nrm = new Float32Array(d.n * 3), col = new Float32Array(d.n * 3);
+        var qc = new Uint8Array(buf, base + d.col, d.n * 3);
+        for (var i = 0; i < d.n * 3; i++) { pos[i] = qp[i] / 8000; nrm[i] = qn[i] / 127; col[i] = qc[i] / 255; }
+        var g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+        g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        g.setIndex(new THREE.BufferAttribute(new Uint16Array(buf, base + d.idx, d.ic), 1));
+        geos[k] = g;
+      });
+      PEOPLE.push({ name: pp.name, female: pp.female, pivots: pp.pivots, geos: geos });
+    });
+  }
+  // tasodifiy 3D odam (jinsi bo'yicha); yo'q bo'lsa null
+  G.peopleModel = function (female) {
+    if (G.GFX !== 'kenney' || !PEOPLE.length) return null;
+    var pool = PEOPLE.filter(function (p) { return p.female === !!female; });
+    var p = G.pick(pool.length ? pool : PEOPLE);
+    return { pivots: p.pivots, geos: p.geos, mat: peopleMat };
+  };
+
   function gunzip(buf) {
     var u8 = new Uint8Array(buf);
     if (!(u8[0] === 0x1f && u8[1] === 0x8b)) return Promise.resolve(buf); // server o'zi ochib bergan
@@ -114,11 +151,17 @@ window.G = window.G || {};
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url); return r.arrayBuffer(); })
         .then(gunzip);
     }
-    Promise.all([getPack('assets/models/kenney.pack.gz?v=2'), getPack('assets/models/cars.pack.gz?v=1'), loadImages()])
+    // odamlar ixtiyoriy: yuklanmasa oddiy odamchalar qoladi, 3D rejim buzilmaydi
+    var people = getPack('assets/models/people.pack.gz?v=1').catch(function (e) {
+      console.warn('[models] odamlar yuklanmadi:', e && e.message);
+      return null;
+    });
+    Promise.all([getPack('assets/models/kenney.pack.gz?v=2'), getPack('assets/models/cars.pack.gz?v=1'), loadImages(), people])
       .then(function (res) {
         if (ready) return;
         parsePack(res[0]);
         parsePack(res[1]);
+        if (res[3]) parsePeople(res[3]);
         kitMat('car');
         clearTimeout(timer);
         finish(true);
