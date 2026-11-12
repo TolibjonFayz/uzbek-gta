@@ -208,8 +208,29 @@ window.G = window.G || {};
       wsB: 0.40, roofF: 0.10, roofR: -0.70, rwB: -0.93, tailH: 1.42,
       wheelR: 0.37, type: 'suv', accel: 12, maxSpeed: 63, ohF: 0.92, ohR: 1.00,
       premium: true, colors: ['#0c0e10', '#4a5568', '#f4f6f5']
+    },
+    // ===== XIZMAT MASHINALARI (trafikda kam uchraydi; 3D rejimda RG Poly modellari) =====
+    'Tez yordam': {
+      len: 5.60, wid: 2.05, roofH: 2.55, cl: 0.32, noseH: 1.00, hoodH: 1.20,
+      wsB: 0.62, roofF: 0.42, roofR: -0.92, rwB: -0.98, tailH: 2.30,
+      wheelR: 0.36, type: 'van', accel: 6, maxSpeed: 42, ohF: 0.80, ohR: 1.10,
+      service: true, model: 'rg/Ambulance_1_A', colors: ['#f4f6f5']
+    },
+    'Betonovoz': {
+      len: 8.00, wid: 2.50, roofH: 3.50, cl: 0.40, noseH: 1.40, hoodH: 1.60,
+      wsB: 0.72, roofF: 0.55, roofR: -0.90, rwB: -0.98, tailH: 3.20,
+      wheelR: 0.50, type: 'van', accel: 3.5, maxSpeed: 28, ohF: 0.70, ohR: 1.00,
+      service: true, model: 'rg/Concrate Truck', colors: ['#f2b705']
+    },
+    'Fura': {
+      len: 6.60, wid: 2.50, roofH: 3.30, cl: 0.40, noseH: 1.40, hoodH: 1.60,
+      wsB: 0.72, roofF: 0.55, roofR: -0.20, rwB: -0.30, tailH: 1.40,
+      wheelR: 0.50, type: 'van', accel: 4, maxSpeed: 32, ohF: 0.60, ohR: 1.20,
+      service: true, model: 'rg/Truck_A', colors: ['#2e7fc0']
     }
   };
+  // 3D rejimda Matiz — RG Poly mini mashinasi (rangi modelning o'zida)
+  SPECS['Matiz'].model = 'rg/Car_1_B';
 
   // brend va tur (ma'lumot paneli uchun)
   var META = {
@@ -228,7 +249,9 @@ window.G = window.G || {};
     'Audi RS Q8': ['Audi', 'sport SUV'], 'Audi R8': ['Audi', 'superkar'],
     'VW Polo': ['Volkswagen', 'xetchbek'], 'VW Jetta': ['Volkswagen', 'sedan'],
     'VW Passat': ['Volkswagen', 'sedan'], 'VW Arteon': ['Volkswagen', 'fastbek'],
-    'VW Tiguan': ['Volkswagen', 'krossover'], 'VW Touareg': ['Volkswagen', 'SUV']
+    'VW Tiguan': ['Volkswagen', 'krossover'], 'VW Touareg': ['Volkswagen', 'SUV'],
+    'Tez yordam': ['Shahar xizmati —', 'tez yordam'], 'Betonovoz': ['Qurilish —', 'betonovoz'],
+    'Fura': ['Yuk tashish —', 'shatakchi']
   };
   Object.keys(META).forEach(function (n) {
     SPECS[n].brand = META[n][0];
@@ -474,7 +497,8 @@ window.G = window.G || {};
 
   G.CAR_SPECS = SPECS;
   // trafik faqat oddiy mashinalardan; premium — faqat avtosalonda
-  G.CAR_NAMES = Object.keys(SPECS).filter(function (n) { return !SPECS[n].premium; });
+  G.CAR_NAMES = Object.keys(SPECS).filter(function (n) { return !SPECS[n].premium && !SPECS[n].service; });
+  G.SERVICE_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].service; });
   G.PREMIUM_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].premium; });
 
   // ---------- ENTITY ----------

@@ -132,7 +132,8 @@ window.G = window.G || {};
   function laneZ(road, dir, off) { return road.pos + dir * off; }
 
   function spawnTrafficCar(scene, road, dir, along, laneOff) {
-    var name = G.pick(G.CAR_NAMES);
+    // har ~11 mashinadan biri — xizmat mashinasi (tez yordam, betonovoz, fura)
+    var name = (G.SERVICE_NAMES && G.SERVICE_NAMES.length && Math.random() < 0.09) ? G.pick(G.SERVICE_NAMES) : G.pick(G.CAR_NAMES);
     var x, z, heading;
     if (road.vertical) {
       x = laneX(road, dir, laneOff);

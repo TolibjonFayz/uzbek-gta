@@ -1580,12 +1580,12 @@ window.G = window.G || {};
     if (x > 225 && x < 375 && z > 592 && z < 634) return true;        // vokzal platformasi
     return false;
   }
-  function tryPlace(type, x, z, rot90, sub) {
+  function tryPlace(type, x, z, rot90) {
     var dims = INST_DIMS[type];
     var hw = rot90 ? dims[1] : dims[0];
     var hd = rot90 ? dims[0] : dims[1];
     if (overlapsCollider(x, z, hw, hd) || inReserved(x, z, hw, hd) || onAsphalt(x, z, hw, hd)) return false;
-    inst[type].push({ x: x, z: z, r: rot90, sub: !!sub }); // sub — zamonaviy hovli uy (mahalla emas)
+    inst[type].push({ x: x, z: z, r: rot90 });
     G.addCollider(x, z, hw, hd);
     return true;
   }
@@ -1631,7 +1631,7 @@ window.G = window.G || {};
           for (var x = left + 8; x <= right - 8; x += 30) {
             for (var z = top + 8; z <= bot - 8; z += 26) {
               if (Math.random() < skip) continue;
-              tryPlace('house', x + G.rand(-4, 4), z + G.rand(-3, 3), Math.random() < 0.3, plan === 'suburb');
+              tryPlace('house', x + G.rand(-4, 4), z + G.rand(-3, 3), Math.random() < 0.3);
             }
           }
         } else if (plan === 'panelka') {
@@ -1649,7 +1649,7 @@ window.G = window.G || {};
               var t = plan === 'mix'
                 ? (Math.random() < 0.5 ? 'house' : 'pan5')
                 : (Math.random() < 0.45 ? 'offG' : 'flatA');
-              tryPlace(t, x3 + G.rand(-5, 5), z3 + G.rand(-4, 4), Math.random() < 0.3, true);
+              tryPlace(t, x3 + G.rand(-5, 5), z3 + G.rand(-4, 4), Math.random() < 0.3);
             }
           }
         }
@@ -1662,14 +1662,12 @@ window.G = window.G || {};
   }
 
   // ---------- BO'LAKLANGAN INSTANCING ----------
+  var CHUNK = 400;
   // three r128 InstancedMesh'da frustumCulled=false — butun shahar har kadrda chiziladi.
   // Nusxalarni 400 m bo'laklarga ajratib, har bo'lakka o'z sferasini beramiz va kesishni
   // yoqamiz: kamera ko'rmaydigan bo'laklar umuman chizilmaydi.
-  // maxDist — shundan uzoqdagi bo'lak yashiriladi (kichik, poligoni ko'p uylar uchun LOD)
-  var lodChunks = [];
-  function addInstancedChunks(scene, geo, mat, items /* [{m: Matrix4, c?: Color}] */, chunk, maxDist) {
+  function addInstancedChunks(scene, geo, mat, items /* [{m: Matrix4, c?: Color}] */) {
     if (!items.length) return;
-    var CHUNK = chunk || 400;
     if (!geo.boundingSphere) geo.computeBoundingSphere();
     var buckets = {};
     items.forEach(function (it) {
@@ -1684,7 +1682,7 @@ window.G = window.G || {};
       Object.keys(geo.attributes).forEach(function (a) { g.setAttribute(a, geo.attributes[a]); });
       if (geo.index) g.setIndex(geo.index);
       geo.groups.forEach(function (gr) { g.addGroup(gr.start, gr.count, gr.materialIndex); });
-      var center = new THREE.Vector3(), maxS = 0;
+      var center = new THREE.Vector3();
       list.forEach(function (it) { center.add(tmp.setFromMatrixPosition(it.m)); });
       center.divideScalar(list.length);
       var rad = 0;
@@ -1703,31 +1701,16 @@ window.G = window.G || {};
       im.instanceMatrix.needsUpdate = true;
       if (im.instanceColor) im.instanceColor.needsUpdate = true;
       scene.add(im);
-      if (maxDist) lodChunks.push({ mesh: im, x: center.x, z: center.z, r: rad, d: maxDist });
     });
   }
-  // har 0.3 s: kameradan uzoq bo'laklarni yashirish
-  var lodT = 0;
-  G.animated.push({ fn: function (dt) {
-    lodT -= dt;
-    if (lodT > 0 || !lodChunks.length) return;
-    lodT = 0.3;
-    var cam = G.debug && G.debug.camera;
-    if (!cam) return;
-    var cx = cam.position.x, cz = cam.position.z;
-    for (var i = 0; i < lodChunks.length; i++) {
-      var c = lodChunks[i];
-      var dx = c.x - cx, dz = c.z - cz;
-      c.mesh.visible = Math.sqrt(dx * dx + dz * dz) - c.r < c.d;
-    }
-  } });
 
   function finalizeInstanced(scene) {
     var q0 = new THREE.Quaternion();
     var q90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
     var one = new THREE.Vector3(1, 1, 1);
     var m4 = new THREE.Matrix4();
-    var KEN = G.GFX === 'kenney' && G.kenneyBuilding;
+    // 3D rejim: models.js G.buildingTexture'ni realistik fasadga almashtirgan (g'isht, beton, deraza ortida xona)
+    var REAL = G.GFX === 'kenney';
 
     function makeInst(list, geo, mat, y, colorize) {
       if (!list.length) return;
@@ -1738,49 +1721,72 @@ window.G = window.G || {};
         };
       }));
     }
-
-    // Kenney binolari: har nusxaga tasodifiy model, joyiga (collider o'lchamiga) sig'diriladi
-    function makeKenney(list, pool, dims, chunk, maxDist) {
-      var byModel = {};
-      list.forEach(function (e) {
-        var name = G.pick(pool);
-        var kb = G.kenneyBuilding(name);
-        if (!kb) return;
-        var fw = dims[0] * 2, fd = dims[1] * 2;      // model o'z o'qlarida (burilishdan oldin)
-        var sc = Math.min(fw / kb.w, fd / kb.d) * 0.96;
-        var ang = (e.r ? Math.PI / 2 : 0) + (Math.random() < 0.5 ? Math.PI : 0);
-        var m = new THREE.Matrix4().makeTranslation(e.x, 0, e.z)
-          .multiply(new THREE.Matrix4().makeRotationY(ang))
-          .multiply(new THREE.Matrix4().makeScale(sc, sc, sc))
-          .multiply(new THREE.Matrix4().makeTranslation(-kb.cx, 0, -kb.cz));
-        (byModel[name] || (byModel[name] = [])).push({ m: m });
-      });
-      Object.keys(byModel).forEach(function (name) {
-        var kb = G.kenneyBuilding(name);
-        addInstancedChunks(scene, kb.geo, kb.mat, byModel[name], chunk, maxDist);
-      });
-    }
-    if (KEN) {
-      makeKenney(inst.offG, G.KENNEY_OFFICE, INST_DIMS.offG);
-      makeKenney(inst.flatA, G.KENNEY_WIDE, INST_DIMS.flatA);
-      // hovli uylar ko'p va kichik — 200 m bo'laklar, uzoqdagilari yashiriladi
-      makeKenney(inst.house.filter(function (e) { return e.sub; }), G.KENNEY_HOUSE, INST_DIMS.house, 200, G.IS_TOUCH ? 300 : 420);
-      inst.offG = []; inst.flatA = [];
-      inst.house = inst.house.filter(function (e) { return !e.sub; }); // mahalla hovlilari — klassik
+    // bir turdagi binolarni bir nechta fasad variantiga bo'lamiz (shahar bir xil ko'rinmasin)
+    function byVariant(list, n) {
+      var out = [];
+      for (var v = 0; v < n; v++) out.push([]);
+      list.forEach(function (e, i) { out[i % n].push(e); });
+      return out;
     }
 
-    function panelMats(color, floors) {
-      var front = new THREE.MeshLambertMaterial({ map: G.buildingTexture(color, floors, 7, 'panelka') });
-      var side = new THREE.MeshLambertMaterial({ map: G.buildingTexture(color, floors, 3, 'panelka') });
-      var roof = G.mat(0x5c5650);
-      return [side, side, roof, roof, front, front];
+    // bitta material = bitta draw call: old/orqa fasad, yon fasad va tom bitta atlas teksturada
+    var atlasCache = {};
+    function atlasMat(color, floors, colsF, colsS, style, roofColor) {
+      var key = [color, floors, colsF, colsS, style, roofColor].join('_');
+      if (atlasCache[key]) return atlasCache[key];
+      var front = G.buildingTexture(color, floors, colsF, style).image;
+      var side = G.buildingTexture(color, floors, colsS, style).image;
+      var S = front.width;
+      var cv = document.createElement('canvas');
+      cv.width = S; cv.height = S;
+      var ctx = cv.getContext('2d');
+      ctx.drawImage(front, 0, 0, S * 0.625, S);
+      ctx.drawImage(side, S * 0.625, 0, S * 0.375, S * 0.95);
+      ctx.fillStyle = roofColor || '#5c5650';
+      ctx.fillRect(S * 0.625, S * 0.95, S * 0.375, S * 0.05);
+      var tex = new THREE.CanvasTexture(cv);
+      atlasCache[key] = style === 'glass'
+        ? new THREE.MeshPhongMaterial({ map: tex, shininess: 110, specular: 0x88aacc })
+        : new THREE.MeshLambertMaterial({ map: tex });
+      return atlasCache[key];
+    }
+    // BoxGeometry yuzlari: 0:+x 1:-x (yon) 2:+y 3:-y (tom/tag) 4:+z 5:-z (old/orqa)
+    function atlasBox(w, h, d) {
+      var geo = new THREE.BoxGeometry(w, h, d);
+      var uv = geo.attributes.uv;
+      var RECT = [[0.625, 1, 0.05, 1], [0.625, 1, 0.05, 1], [0.7, 0.9, 0.01, 0.03], [0.7, 0.9, 0.01, 0.03], [0, 0.625, 0, 1], [0, 0.625, 0, 1]];
+      for (var i = 0; i < uv.count; i++) {
+        var r = RECT[Math.floor(i / 4)];
+        uv.setXY(i, r[0] + uv.getX(i) * (r[1] - r[0]), r[2] + uv.getY(i) * (r[3] - r[2]));
+      }
+      geo.clearGroups();
+      return geo;
     }
 
-    makeInst(inst.pan5, new THREE.BoxGeometry(28, 15, 11), panelMats('#cfc5b0', 5), 7.5);
-    makeInst(inst.pan9, new THREE.BoxGeometry(28, 27, 11), panelMats('#c4cdd4', 9), 13.5);
-    makeInst(inst.flatA, new THREE.BoxGeometry(24, 18, 12), panelMats('#c8beac', 6), 9);
-    var offMat = new THREE.MeshPhongMaterial({ map: G.buildingTexture('#274b63', 7, 5, 'glass'), shininess: 110, specular: 0x88aacc });
-    makeInst(inst.offG, new THREE.BoxGeometry(16, 22, 13), offMat, 11);
+    if (REAL) {
+      var PAN = ['#cfc5b0', '#c4cdd4', '#d8cbb2'];
+      byVariant(inst.pan5, 3).forEach(function (l, v) { makeInst(l, atlasBox(28, 15, 11), atlasMat(PAN[v], 5, 7, 3, 'panelka'), 7.5); });
+      byVariant(inst.pan9, 3).forEach(function (l, v) { makeInst(l, atlasBox(28, 27, 11), atlasMat(PAN[v], 9, 7, 3, 'panelka'), 13.5); });
+      var FLAT = ['#c8beac', '#b9a58c', '#d6d0c4'];
+      byVariant(inst.flatA, 3).forEach(function (l, v) { makeInst(l, atlasBox(24, 18, 12), atlasMat(FLAT[v], 6, 6, 3, 'flat'), 9); });
+      // ofislar: yarmi shisha, yarmi tosh-g'isht
+      var OFF = [['#274b63', 'glass'], ['#2a5570', 'glass'], ['#d0c4ae', 'flat'], ['#bfb6a6', 'flat']];
+      byVariant(inst.offG, 4).forEach(function (l, v) { makeInst(l, atlasBox(16, 22, 13), atlasMat(OFF[v][0], 7, 5, 4, OFF[v][1]), 11); });
+      // hovli uylar: realistik devor + shifer tom
+      var roofTex = G.roofTexture && G.roofTexture();
+      var roofMat = roofTex ? new THREE.MeshLambertMaterial({ map: roofTex, color: 0x9a8f88 }) : G.mat(0x7d5236);
+      var roofGeo2 = new THREE.ConeGeometry(6.2, 2.2, 4);
+      roofGeo2.rotateY(Math.PI / 4);
+      var HOUSE = ['#d8c9a8', '#cfc0a0', '#c9b79a'];
+      byVariant(inst.house, 3).forEach(function (l, v) { makeInst(l, atlasBox(9, 3.4, 7.5), atlasMat(HOUSE[v], 1, 3, 2, 'house', '#6b5d50'), 1.7); });
+      makeInst(inst.house, roofGeo2, roofMat, 4.5);
+      return;
+    }
+
+    makeInst(inst.pan5, atlasBox(28, 15, 11), atlasMat('#cfc5b0', 5, 7, 3, 'panelka'), 7.5);
+    makeInst(inst.pan9, atlasBox(28, 27, 11), atlasMat('#c4cdd4', 9, 7, 3, 'panelka'), 13.5);
+    makeInst(inst.flatA, atlasBox(24, 18, 12), atlasMat('#c8beac', 6, 7, 3, 'panelka'), 9);
+    makeInst(inst.offG, atlasBox(16, 22, 13), atlasMat('#274b63', 7, 5, 5, 'glass'), 11);
     var houseColors = [new THREE.Color(0xd8c9a8), new THREE.Color(0xcfc0a0), new THREE.Color(0xe0d2b4), new THREE.Color(0xd4c4a0)];
     makeInst(inst.house, new THREE.BoxGeometry(9, 3.4, 7.5), new THREE.MeshLambertMaterial({ color: 0xffffff }), 1.7, houseColors);
     // hovli uylari tomlari

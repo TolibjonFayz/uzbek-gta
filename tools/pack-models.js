@@ -1,7 +1,7 @@
 // Kenney GLB modellarini bitta ixcham, siqilgan faylga aylantirish.
 // Ishlatish:  node tools/pack-models.js <kenney_yuklab_olingan_papka>
-//   papka ichida: car-kit/, city-commercial/, city-suburban/ (kenney.nl zip'lari ochilgan holda)
-// Natija: assets/models/kenney.pack.gz + colormap PNG'lar + LICENSE
+//   papka ichida: car-kit/ (kenney.nl zip'i ochilgan holda)
+// Natija: assets/models/kenney.pack.gz + colormap-car.png + LICENSE
 //
 // GLB'ni brauzerda emas, shu yerda o'qiymiz: tugun transformatsiyalari geometriyaga
 // "pishiriladi", teksturalar/materiallar tashlanadi (o'yin o'zining materialini beradi).
@@ -19,13 +19,10 @@ if (!SRC) { console.error("Kenney papkasini ko'rsating"); process.exit(1); }
 const OUT = path.join(__dirname, '..', 'assets', 'models');
 fs.mkdirSync(OUT, { recursive: true });
 
+// Binolar endi realistik fasad teksturalari bilan (models.js), Kenney'dan faqat
+// Damas uchun furgon va shikastda uchadigan bamper qoldi.
 const KITS = {
-  car: { dir: 'car-kit', files: ['sedan', 'sedan-sports', 'hatchback-sports', 'suv', 'suv-luxury', 'van', 'police', 'taxi', 'debris-bumper'] },
-  city: { dir: 'city-commercial', files: [
-    'building-a', 'building-b', 'building-c', 'building-d', 'building-e', 'building-f', 'building-g',
-    'building-h', 'building-i', 'building-j', 'building-k', 'building-l', 'building-m', 'building-n',
-    'building-skyscraper-a', 'building-skyscraper-b', 'building-skyscraper-c', 'building-skyscraper-d', 'building-skyscraper-e'] },
-  sub: { dir: 'city-suburban', files: 'abcdefghijklmnopqrstu'.split('').map(function (c) { return 'building-type-' + c; }) }
+  car: { dir: 'car-kit', files: ['van', 'debris-bumper'] }
 };
 
 // ---- 4x4 matritsa (ustun-asosiy, glTF kabi) ----
