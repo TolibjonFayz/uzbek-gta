@@ -1580,12 +1580,12 @@ window.G = window.G || {};
     if (x > 225 && x < 375 && z > 592 && z < 634) return true;        // vokzal platformasi
     return false;
   }
-  function tryPlace(type, x, z, rot90) {
+  function tryPlace(type, x, z, rot90, sub) {
     var dims = INST_DIMS[type];
     var hw = rot90 ? dims[1] : dims[0];
     var hd = rot90 ? dims[0] : dims[1];
     if (overlapsCollider(x, z, hw, hd) || inReserved(x, z, hw, hd) || onAsphalt(x, z, hw, hd)) return false;
-    inst[type].push({ x: x, z: z, r: rot90 });
+    inst[type].push({ x: x, z: z, r: rot90, sub: !!sub }); // sub — zamonaviy hovli uy (mahalla emas)
     G.addCollider(x, z, hw, hd);
     return true;
   }
@@ -1631,7 +1631,7 @@ window.G = window.G || {};
           for (var x = left + 8; x <= right - 8; x += 30) {
             for (var z = top + 8; z <= bot - 8; z += 26) {
               if (Math.random() < skip) continue;
-              tryPlace('house', x + G.rand(-4, 4), z + G.rand(-3, 3), Math.random() < 0.3);
+              tryPlace('house', x + G.rand(-4, 4), z + G.rand(-3, 3), Math.random() < 0.3, plan === 'suburb');
             }
           }
         } else if (plan === 'panelka') {
@@ -1649,7 +1649,7 @@ window.G = window.G || {};
               var t = plan === 'mix'
                 ? (Math.random() < 0.5 ? 'house' : 'pan5')
                 : (Math.random() < 0.45 ? 'offG' : 'flatA');
-              tryPlace(t, x3 + G.rand(-5, 5), z3 + G.rand(-4, 4), Math.random() < 0.3);
+              tryPlace(t, x3 + G.rand(-5, 5), z3 + G.rand(-4, 4), Math.random() < 0.3, true);
             }
           }
         }
@@ -1661,24 +1661,112 @@ window.G = window.G || {};
     }
   }
 
+  // ---------- BO'LAKLANGAN INSTANCING ----------
+  // three r128 InstancedMesh'da frustumCulled=false — butun shahar har kadrda chiziladi.
+  // Nusxalarni 400 m bo'laklarga ajratib, har bo'lakka o'z sferasini beramiz va kesishni
+  // yoqamiz: kamera ko'rmaydigan bo'laklar umuman chizilmaydi.
+  // maxDist — shundan uzoqdagi bo'lak yashiriladi (kichik, poligoni ko'p uylar uchun LOD)
+  var lodChunks = [];
+  function addInstancedChunks(scene, geo, mat, items /* [{m: Matrix4, c?: Color}] */, chunk, maxDist) {
+    if (!items.length) return;
+    var CHUNK = chunk || 400;
+    if (!geo.boundingSphere) geo.computeBoundingSphere();
+    var buckets = {};
+    items.forEach(function (it) {
+      var e = it.m.elements;
+      var k = Math.floor(e[12] / CHUNK) + ',' + Math.floor(e[14] / CHUNK);
+      (buckets[k] || (buckets[k] = [])).push(it);
+    });
+    var tmp = new THREE.Vector3();
+    Object.keys(buckets).forEach(function (k) {
+      var list = buckets[k];
+      var g = new THREE.BufferGeometry(); // atributlar umumiy (GPU'ga bir marta yuklanadi)
+      Object.keys(geo.attributes).forEach(function (a) { g.setAttribute(a, geo.attributes[a]); });
+      if (geo.index) g.setIndex(geo.index);
+      geo.groups.forEach(function (gr) { g.addGroup(gr.start, gr.count, gr.materialIndex); });
+      var center = new THREE.Vector3(), maxS = 0;
+      list.forEach(function (it) { center.add(tmp.setFromMatrixPosition(it.m)); });
+      center.divideScalar(list.length);
+      var rad = 0;
+      list.forEach(function (it) {
+        var sc = it.m.getMaxScaleOnAxis();
+        tmp.copy(geo.boundingSphere.center).applyMatrix4(it.m);
+        rad = Math.max(rad, tmp.distanceTo(center) + geo.boundingSphere.radius * sc);
+      });
+      g.boundingSphere = new THREE.Sphere(center, rad);
+      var im = new THREE.InstancedMesh(g, mat, list.length);
+      im.frustumCulled = true;
+      for (var i = 0; i < list.length; i++) {
+        im.setMatrixAt(i, list[i].m);
+        if (list[i].c) im.setColorAt(i, list[i].c);
+      }
+      im.instanceMatrix.needsUpdate = true;
+      if (im.instanceColor) im.instanceColor.needsUpdate = true;
+      scene.add(im);
+      if (maxDist) lodChunks.push({ mesh: im, x: center.x, z: center.z, r: rad, d: maxDist });
+    });
+  }
+  // har 0.3 s: kameradan uzoq bo'laklarni yashirish
+  var lodT = 0;
+  G.animated.push({ fn: function (dt) {
+    lodT -= dt;
+    if (lodT > 0 || !lodChunks.length) return;
+    lodT = 0.3;
+    var cam = G.debug && G.debug.camera;
+    if (!cam) return;
+    var cx = cam.position.x, cz = cam.position.z;
+    for (var i = 0; i < lodChunks.length; i++) {
+      var c = lodChunks[i];
+      var dx = c.x - cx, dz = c.z - cz;
+      c.mesh.visible = Math.sqrt(dx * dx + dz * dz) - c.r < c.d;
+    }
+  } });
+
   function finalizeInstanced(scene) {
     var q0 = new THREE.Quaternion();
     var q90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
     var one = new THREE.Vector3(1, 1, 1);
     var m4 = new THREE.Matrix4();
+    var KEN = G.GFX === 'kenney' && G.kenneyBuilding;
 
     function makeInst(list, geo, mat, y, colorize) {
       if (!list.length) return;
-      var im = new THREE.InstancedMesh(geo, mat, list.length);
-      for (var i = 0; i < list.length; i++) {
-        var e = list[i];
-        m4.compose(new THREE.Vector3(e.x, y, e.z), e.r ? q90 : q0, one);
-        im.setMatrixAt(i, m4);
-        if (colorize) im.setColorAt(i, colorize[i % colorize.length]);
-      }
-      im.instanceMatrix.needsUpdate = true;
-      if (im.instanceColor) im.instanceColor.needsUpdate = true;
-      scene.add(im);
+      addInstancedChunks(scene, geo, mat, list.map(function (e, i) {
+        return {
+          m: new THREE.Matrix4().compose(new THREE.Vector3(e.x, y, e.z), e.r ? q90 : q0, one),
+          c: colorize ? colorize[i % colorize.length] : null
+        };
+      }));
+    }
+
+    // Kenney binolari: har nusxaga tasodifiy model, joyiga (collider o'lchamiga) sig'diriladi
+    function makeKenney(list, pool, dims, chunk, maxDist) {
+      var byModel = {};
+      list.forEach(function (e) {
+        var name = G.pick(pool);
+        var kb = G.kenneyBuilding(name);
+        if (!kb) return;
+        var fw = dims[0] * 2, fd = dims[1] * 2;      // model o'z o'qlarida (burilishdan oldin)
+        var sc = Math.min(fw / kb.w, fd / kb.d) * 0.96;
+        var ang = (e.r ? Math.PI / 2 : 0) + (Math.random() < 0.5 ? Math.PI : 0);
+        var m = new THREE.Matrix4().makeTranslation(e.x, 0, e.z)
+          .multiply(new THREE.Matrix4().makeRotationY(ang))
+          .multiply(new THREE.Matrix4().makeScale(sc, sc, sc))
+          .multiply(new THREE.Matrix4().makeTranslation(-kb.cx, 0, -kb.cz));
+        (byModel[name] || (byModel[name] = [])).push({ m: m });
+      });
+      Object.keys(byModel).forEach(function (name) {
+        var kb = G.kenneyBuilding(name);
+        addInstancedChunks(scene, kb.geo, kb.mat, byModel[name], chunk, maxDist);
+      });
+    }
+    if (KEN) {
+      makeKenney(inst.offG, G.KENNEY_OFFICE, INST_DIMS.offG);
+      makeKenney(inst.flatA, G.KENNEY_WIDE, INST_DIMS.flatA);
+      // hovli uylar ko'p va kichik — 200 m bo'laklar, uzoqdagilari yashiriladi
+      makeKenney(inst.house.filter(function (e) { return e.sub; }), G.KENNEY_HOUSE, INST_DIMS.house, 200, G.IS_TOUCH ? 300 : 420);
+      inst.offG = []; inst.flatA = [];
+      inst.house = inst.house.filter(function (e) { return !e.sub; }); // mahalla hovlilari — klassik
     }
 
     function panelMats(color, floors) {
@@ -1699,14 +1787,7 @@ window.G = window.G || {};
     if (inst.house.length) {
       var roofGeo = new THREE.ConeGeometry(6.2, 2.2, 4);
       roofGeo.rotateY(Math.PI / 4);
-      var imR = new THREE.InstancedMesh(roofGeo, G.mat(0x7d5236), inst.house.length);
-      for (var ri = 0; ri < inst.house.length; ri++) {
-        var e2 = inst.house[ri];
-        m4.compose(new THREE.Vector3(e2.x, 4.5, e2.z), e2.r ? q90 : q0, one);
-        imR.setMatrixAt(ri, m4);
-      }
-      imR.instanceMatrix.needsUpdate = true;
-      scene.add(imR);
+      makeInst(inst.house, roofGeo, G.mat(0x7d5236), 4.5);
     }
   }
 

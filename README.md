@@ -234,3 +234,14 @@ O'zbekistondagidek **o'ng qo'l harakati**: har mashina o'z yo'nalishining o'ng t
 ## Auto-shahar
 
 Bo'sh kataklar avtomatik binolar bilan to'ldiriladi (tuman uslubiga qarab: markaz — shisha ofislar, Yunusobod/Chilonzor — panelkalar, Eski shahar — mahalla uylari). Hammasi instancing bilan chizilgani uchun yuzlab bino qo'shilsa ham tezlik tushmaydi. Yangi bo'sh joyni to'ldirmaslik uchun `markUsed(x,z)` ishlatiladi.
+
+## 🆕 3D modellar (Kenney, CC0)
+
+Start ekranida **Grafika: Yangi 3D modellar / Klassik** tanlovi bor (tanlov `localStorage` da saqlanadi, `?gfx=classic` yoki `?gfx=kenney` bilan ham sinash mumkin).
+
+- Mashinalar: Kenney **Car Kit** (sedan, sport sedan, xetchbek, SUV, lyuks SUV, furgon, militsiya). Rang o'yindagi kabi tasodifiy, shikast/bamper tizimi ishlaydi.
+- Binolar: Kenney **City Kit Commercial** (ofis/osmono'par) va **City Kit Suburban** (hovli uylar). Panelka uylar, mahalla hovlilari va diqqatga sazovor joylar — o'zimizniki.
+- Hamma modellar bitta faylda: `assets/models/kenney.pack.gz` (~0.9 MB). Yuklanmasa o'yin avtomatik klassik grafikaga o'tadi.
+- Modellarni qayta yig'ish: kenney.nl dan to'plamlarni yuklab, zip'larni bitta papkaga oching (`car-kit/`, `city-commercial/`, `city-suburban/`) va:
+  `node tools/pack-models.js <papka>`
+- Litsenziya: CC0 (tekin, tijoratda ham) — `assets/models/LICENSE-Kenney-CC0.txt`. Muallif: Kenney (www.kenney.nl).

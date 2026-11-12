@@ -261,6 +261,25 @@
     50%     { box-shadow:0 0 0 2px rgba(255,246,216,.75), 0 0 0 11px rgba(242,183,5,.08), 0 10px 40px rgba(242,183,5,.62); }
   }
 
+  #startBtn.loading { animation:none; opacity:.75; cursor:wait; font-size:clamp(12px,2.4vw,18px); }
+
+  /* --- grafika tanlovi --- */
+  #gfxToggle {
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center;
+    font-size:clamp(10px,1.7vw,13px); color:#8fb2d4;
+  }
+  #gfxToggle button {
+    font-family:inherit; font-size:inherit; font-weight:700; cursor:pointer;
+    padding:5px 12px; border-radius:999px;
+    color:#cfe3f5; background:rgba(10,24,54,.55);
+    border:1px solid rgba(127,208,232,.35);
+    transition:background .15s, color .15s;
+  }
+  #gfxToggle button.on {
+    color:#3a2408; background:linear-gradient(180deg,#ffe9a8,#f2b705);
+    border-color:#f2b705;
+  }
+
   #startScreen .keys {
     color:#8fb2d4; font-size:clamp(8px,1.85vw,13px); line-height:1.85;
     text-shadow:0 1px 5px rgba(0,0,0,.75);
@@ -278,6 +297,8 @@
     .ss-flagline i { height:3px; }
     #startScreen p.sub { display:none; }
     #startBtn { padding:9px 34px; font-size:16px; }
+    #gfxToggle { font-size:10px; gap:4px; }
+    #gfxToggle button { padding:3px 9px; }
     #startScreen .keys { font-size:9px; line-height:1.6; }
     .ss-skyline { height:clamp(60px,20vh,120px); opacity:.75; }
   }
@@ -552,6 +573,12 @@
 
     <button id="startBtn"><span class="ss-btn-orn">✦</span> O'YINNI BOSHLASH <span class="ss-btn-orn">✦</span></button>
 
+    <div id="gfxToggle" title="Grafika uslubi (tanlov saqlanadi)">
+      <span>Grafika:</span>
+      <button type="button" data-gfx="kenney">🆕 Yangi 3D modellar</button>
+      <button type="button" data-gfx="classic">Klassik</button>
+    </div>
+
     <div class="keys">
       <b>W A S D</b> yurish/haydash &nbsp;·&nbsp; <b>Enter</b> mashina &nbsp;·&nbsp; <b>Space</b> sakrash &nbsp;·&nbsp; <b>Shift</b> yugurish &nbsp;·&nbsp; <b>F</b> musht<br>
       <b>E</b> ovqat/salon &nbsp;·&nbsp; <b>V</b> salon kamera &nbsp;·&nbsp; <b>M</b> qo'shiq &nbsp;·&nbsp; <b>T</b> vaqt &nbsp;·&nbsp; <b>X</b> xarita &nbsp;·&nbsp; <b>B</b> reyting
@@ -639,23 +666,24 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="js/util.js?v=18"></script>
-<script src="js/tg.js?v=18"></script>
-<script src="js/audio.js?v=18"></script>
-<script src="js/daynight.js?v=18"></script>
-<script src="js/vehicles.js?v=18"></script>
-<script src="js/salon.js?v=18"></script>
-<script src="js/world.js?v=18"></script>
-<script src="js/traffic.js?v=18"></script>
-<script src="js/peds.js?v=18"></script>
-<script src="js/train.js?v=18"></script>
-<script src="js/police.js?v=18"></script>
-<script src="js/damage.js?v=18"></script>
-<script src="js/skid.js?v=18"></script>
-<script src="js/missions.js?v=18"></script>
-<script src="js/map.js?v=18"></script>
-<script src="js/score.js?v=18"></script>
-<script src="js/race.js?v=18"></script>
-<script src="js/main.js?v=18"></script>
+<script src="js/util.js?v=19"></script>
+<script src="js/tg.js?v=19"></script>
+<script src="js/models.js?v=19"></script>
+<script src="js/audio.js?v=19"></script>
+<script src="js/daynight.js?v=19"></script>
+<script src="js/vehicles.js?v=19"></script>
+<script src="js/salon.js?v=19"></script>
+<script src="js/world.js?v=19"></script>
+<script src="js/traffic.js?v=19"></script>
+<script src="js/peds.js?v=19"></script>
+<script src="js/train.js?v=19"></script>
+<script src="js/police.js?v=19"></script>
+<script src="js/damage.js?v=19"></script>
+<script src="js/skid.js?v=19"></script>
+<script src="js/missions.js?v=19"></script>
+<script src="js/map.js?v=19"></script>
+<script src="js/score.js?v=19"></script>
+<script src="js/race.js?v=19"></script>
+<script src="js/main.js?v=19"></script>
 </body>
 </html>

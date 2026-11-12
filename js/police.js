@@ -20,7 +20,7 @@ window.G = window.G || {};
   };
 
   function makePoliceCar(x, z, heading) {
-    var car = G.makeCarEntity('Malibu 2', x, z, heading, '#f4f6f5');
+    var car = G.makeCarEntity('Malibu 2', x, z, heading, '#f4f6f5', 'police');
     car.isPolice = true;
     car.blink = 0;
     // tom mig'alkasi

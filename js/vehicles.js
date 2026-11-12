@@ -341,9 +341,14 @@ window.G = window.G || {};
   }
 
   // ---------- MASHINA MESHI ----------
-  G.createCarMesh = function (name, colorOverride) {
+  G.createCarMesh = function (name, colorOverride, variant) {
     var s = SPECS[name];
     var color = colorOverride || G.pick(s.colors);
+    // yangi grafika: Kenney 3D modeli (models.js); bo'lmasa — klassik kod modeli
+    if (G.GFX === 'kenney' && G.kenneyCarMesh) {
+      var km = G.kenneyCarMesh(name, color, variant);
+      if (km) return km;
+    }
     var bodyMat = new THREE.MeshPhongMaterial({ color: color, shininess: 95, specular: 0x777777 });
     var darkMat = G.mat(0x1a1a1c);
     var glass = G.glassMat();
@@ -473,8 +478,8 @@ window.G = window.G || {};
   G.PREMIUM_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].premium; });
 
   // ---------- ENTITY ----------
-  G.makeCarEntity = function (name, x, z, heading, colorOverride) {
-    var mesh = G.createCarMesh(name, colorOverride);
+  G.makeCarEntity = function (name, x, z, heading, colorOverride, variant) {
+    var mesh = G.createCarMesh(name, colorOverride, variant);
     mesh.position.set(x, 0, z);
     var spec = SPECS[name];
     var car = {

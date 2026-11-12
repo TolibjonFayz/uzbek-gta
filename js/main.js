@@ -1,5 +1,6 @@
 // ============ TASHKENT CITY v3 — asosiy o'yin sikli ============
-(function () {
+// models.js 3D modellarni yuklab bo'lgach ishga tushadi (klassik rejimda — darhol)
+G.whenModelsReady(function () {
   var canvas = document.getElementById('c');
   var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !G.IS_TOUCH });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, G.IS_TOUCH ? 1.5 : 2));
@@ -997,7 +998,7 @@
 
   // test/tekshiruv uchun
   G.debug = {
-    player: player, state: state, camera: camera, keys: keys,
+    player: player, state: state, camera: camera, keys: keys, renderer: renderer, scene: scene,
     start: function () { document.getElementById('startBtn').click(); },
     openFood: openFoodMenu, buyFood: buyFood, energy: function () { return energy; },
     setEnergy: function (v) { energy = v; },
@@ -1009,4 +1010,4 @@
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-})();
+});
