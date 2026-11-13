@@ -45,7 +45,8 @@ window.G = window.G || {};
     // qattiq shikastlanganda biroz qiyshayadi (osilgan podveska)
     if (dmg > 0.4) {
       if (car.dentTilt === undefined) car.dentTilt = G.rand(-0.05, 0.05);
-      car.mesh.rotation.z = car.dentTilt * Math.min(1, (dmg - 0.4) / 0.5);
+      car._dentZ = car.dentTilt * Math.min(1, (dmg - 0.4) / 0.5);   // main.js kuzov harakati bilan qo'shiladi
+      car.mesh.rotation.z = car._dentZ;
     }
   }
 
@@ -63,6 +64,7 @@ window.G = window.G || {};
   G.repairCar = function (car) {
     car.health = 1;
     car.dentTilt = undefined;
+    car._dentZ = 0;
     car.mesh.rotation.z = 0;
     ['F', 'R'].forEach(function (w) {
       var mesh = car.mesh.userData['bump' + w];

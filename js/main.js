@@ -226,6 +226,7 @@ G.whenModelsReady(function () {
     } else {
       var c = state.car;
       c.speed = 0;
+      c.lat = 0;
       c.isParked = true;
       var lx = c.x - Math.sin(c.heading) * (c.spec.wid / 2 + 1.2);
       var lz = c.z + Math.cos(c.heading) * (c.spec.wid / 2 + 1.2);
@@ -741,6 +742,53 @@ G.whenModelsReady(function () {
     }
   }
 
+  // ---------- KUZOV HARAKATI (prujina-amortizator) ----------
+  // tormozda burni "sho'ng'iydi", tezlashganda orqaga cho'kadi, burilishda tashqariga qiyshayadi.
+  function spring(x, v, target, dt) {
+    v += ((target - x) * 70 - v * 9) * dt;
+    return [x + v * dt, v];
+  }
+  function updateBodyMotion(car, dt, dTh) {
+    if (dt <= 0) return;
+    var aLong = car._ls === undefined ? 0 : (car.speed - car._ls) / dt;
+    car._ls = car.speed;
+    var yawRate = dTh / dt;
+    var tp = G.clamp(aLong * 0.0042, -0.055, 0.04);                       // + burni ko'tariladi
+    var tr = G.clamp(-yawRate * car.speed * 0.0062 - car.lat * 0.006, -0.08, 0.08);
+    var p = spring(car.pitch, car.pitchV, tp, dt); car.pitch = p[0]; car.pitchV = p[1];
+    var r = spring(car.roll, car.rollV, tr, dt); car.roll = r[0]; car.rollV = r[1];
+    car.mesh.rotation.z = (car._dentZ || 0) + car.pitch;
+    car.mesh.rotation.x = car.roll;
+  }
+
+  // ---------- DRIFT HISOBI ----------
+  var drift = { dist: 0, idle: 0, best: 0 };
+  function updateDriftScore(car, dt) {
+    var v = Math.hypot(car.speed, car.lat);
+    car.drifting = Math.abs(car.lat) > 2.2 && v > 7;
+    if (car.drifting) {
+      drift.dist += v * dt;
+      drift.idle = 0;
+      return;
+    }
+    if (drift.dist > 0) {
+      drift.idle += dt;
+      if (drift.idle > 0.45) {
+        var m = Math.round(drift.dist);
+        if (m >= 15) {
+          var reward = m * 10;
+          if (G.addMoney) G.addMoney(reward);
+          var rec = m > drift.best;
+          if (rec) drift.best = m;
+          showToast('🔥 Drift ' + m + ' m  +' + somStr(reward) + (rec && m > 40 ? '  · rekord!' : ''), '#ff8c1a');
+          if (G.tgHaptic) G.tgHaptic('light');
+        }
+        drift.dist = 0;
+        drift.idle = 0;
+      }
+    }
+  }
+
   // ---------- HAYDASH REJIMI ----------
   function updateDrive(dt) {
     var car = state.car;
@@ -766,14 +814,51 @@ G.whenModelsReady(function () {
     } else {
       car.speed *= (1 - 0.55 * dt);
     }
-    if (hb) car.speed *= (1 - 3.4 * dt);
+    if (car.lat === undefined) { car.lat = 0; car.pitch = 0; car.pitchV = 0; car.roll = 0; car.rollV = 0; car.drift = false; }
+    // qo'l tormozi: to'g'ri ketayotganda kuchli to'xtatadi, sirpanayotganda yengil (drift saqlanadi)
+    if (hb) car.speed *= (1 - (Math.abs(car.lat) > 2 ? 0.9 : 3.4) * dt);
     car.speed = G.clamp(car.speed, -8, spec.maxSpeed);
-    if (Math.abs(car.speed) < 0.03 && Math.abs(ax.fwd) < 0.05) car.speed = 0;
+    if (Math.abs(car.speed) < 0.03 && Math.abs(ax.fwd) < 0.05 && Math.abs(car.lat) < 0.3) car.speed = 0;
+    var vTot = Math.hypot(car.speed, car.lat);   // umumiy tezlik (driftda oldinga tezlik kichik bo'ladi)
 
     // rul — g'ildarak bazasiga va tezlikka bog'liq
-    var steerEff = G.clamp(Math.abs(car.speed) / 6, 0, 1) * (1 - Math.abs(car.speed) / (spec.maxSpeed * 2.4));
+    var steerEff = G.clamp(vTot / 6, 0, 1) * (1 - vTot / (spec.maxSpeed * 2.4));
     var steerRate = 2.2 * (4.4 / spec.len) * steerEff * (hb ? 1.75 : 1);
+    var gripBase = 26 * (0.9 + Math.min(0.35, spec.accel / 60));         // maks. yon tezlanish (arkada), m/s²
+    // oddiy haydashda burilish tezligi shinalar ko'taradigan darajada (mashina burilishni ushlaydi);
+    // driftda (qo'l tormozi bilan boshlangan) cheklov yo'q
+    if (!hb && !car.drift && vTot > 1) steerRate = Math.min(steerRate, gripBase * 1.06 / vTot);
+    // drift burchagi (tezlik vektori va mashina burni orasidagi): ~45° dan oshirishga rul kam ta'sir qiladi
+    var slip = Math.atan2(car.lat, Math.max(0.5, Math.abs(car.speed)));
+    if (Math.abs(slip) > 0.7 && ax.turn * car.lat < 0) steerRate *= 0.2;
+    var prevHeading = car.heading;
     car.heading += ax.turn * steerRate * dt * (car.speed >= 0 ? 1 : -1);
+    // driftda burun asta harakat yo'nalishiga qaytadi (gaz qo'yilsa tezroq)
+    if (car.drift && !hb) car.heading += slip * (ax.fwd > 0.3 ? 0.9 : 1.8) * dt;
+
+    // ---------- ARKADA FIZIKA: yon sirpanish (drift) ----------
+    // car.lat — yon tezlik (m/s, o'ngga +). Burilganda tezlik vektori dunyoda qoladi va yangi
+    // yo'nalishga qayta bo'linadi; shinalar ilashishi yon tezlikni cheklangan kuch bilan so'ndiradi.
+    // Ilashish chegarasidan oshsa (tez burilish, qo'l tormozi) — mashina sirpanadi.
+    var dTh = car.heading - prevHeading;
+    var cs = Math.cos(dTh), sn = Math.sin(dTh);
+    var sp = car.speed * cs + car.lat * sn;
+    car.lat = -car.speed * sn + car.lat * cs;
+    car.speed = sp;
+    // drift holati (gisterezis): qo'l tormozi bilan boshlanadi; sirpanayotgan shina ilashishi pastroq —
+    // gaz bosib turilsa drift davom etadi, qarshi rul yoki gazni qo'yish bilan tugaydi
+    if (hb && Math.abs(car.lat) > 2) car.drift = true;
+    else if (Math.abs(car.lat) < 1.2) car.drift = false;
+    var grip = gripBase;
+    if (hb) grip *= 0.2;                                                // qo'l tormozi: orqa shinalar sirpanadi
+    else if (car.drift) grip *= ax.fwd > 0.3 ? 0.3 : 0.6;              // gaz bosilsa drift davom etadi
+    if (vTot < 5) grip *= 3;                                            // juda sekinda sirpanmaydi
+    var fix = G.clamp(-car.lat * 14, -grip, grip);
+    car.lat += fix * dt;
+    if (Math.abs(car.lat) > 0.5) {
+      car.speed -= Math.sign(car.speed) * Math.abs(car.lat) * 0.18 * dt;   // sirpanishda tezlik yo'qoladi
+      if (car.drift && ax.fwd > 0.3) car.speed += Math.abs(car.lat) * 0.25 * dt;   // gaz — oldinga itaradi
+    }
 
     // old g'ildiraklar vizual burilishi
     var wf = car.mesh.userData.wheelsF;
@@ -786,13 +871,15 @@ G.whenModelsReady(function () {
     // shina izlari + tutun (burnout — faqat kuchli mashinalarda)
     var burnout = G.carSkid ? G.carSkid(dt, car, ax.fwd, hb) : false;
 
-    // shina chiyillashi (qo'l tormozi, keskin tormoz yoki burnout)
+    // shina chiyillashi (qo'l tormozi, keskin tormoz, drift yoki burnout)
     var hardBrake = ax.fwd < -0.05 && car.speed > 12;
-    if ((hb && Math.abs(car.speed) > 8) || hardBrake || burnout) G.sfx.screechStart();
+    if ((hb && Math.abs(car.speed) > 8) || hardBrake || burnout || car.drifting) G.sfx.screechStart();
     else G.sfx.screechStop();
+    updateDriftScore(car, dt);
 
-    car.x += Math.cos(car.heading) * car.speed * dt;
-    car.z += Math.sin(car.heading) * car.speed * dt;
+    var ch = Math.cos(car.heading), sh = Math.sin(car.heading);
+    car.x += (ch * car.speed - sh * car.lat) * dt;
+    car.z += (sh * car.speed + ch * car.lat) * dt;
     car.x = G.clamp(car.x, -G.MAP - 140, G.MAP + 140);
     car.z = G.clamp(car.z, -G.MAP - 140, G.MAP + 140);
 
@@ -804,8 +891,10 @@ G.whenModelsReady(function () {
         G.damageCar(car, Math.min(0.15, Math.abs(prevSpeed) * 0.009)); // ~6+ urishda portlaydi
       }
       car.speed *= (1 - 4 * dt);
+      car.lat *= (1 - 6 * dt);
     }
     G.updateCarMesh(car);
+    updateBodyMotion(car, dt, dTh);
 
     // piyodalar bilan to'qnashuv / qo'rqitish
     G.checkPedHits(car, dt);
@@ -880,7 +969,10 @@ G.whenModelsReady(function () {
 
   function animate() {
     requestAnimationFrame(animate);
-    var dt = Math.min(clock3.getDelta(), 0.05);
+    frame(Math.min(clock3.getDelta(), 0.05));
+  }
+  // bitta kadr (testlarda G.debug.step(dt) bilan qo'lda ham chaqiriladi)
+  function frame(dt) {
     if (!started) { renderer.render(scene, camera); return; }
     var time = performance.now() / 1000;
 
@@ -897,6 +989,7 @@ G.whenModelsReady(function () {
     if (state.mode === 'foot') updateFoot(dt);
     else updateDrive(dt);
 
+    if (G.stepKnockback) G.stepKnockback(dt);   // urilgan mashinalar yonga siljiydi
     G.resolveCarCollisions();
     if (state.mode === 'drive') G.updateCarMesh(state.car);
 
@@ -1002,7 +1095,9 @@ G.whenModelsReady(function () {
     start: function () { document.getElementById('startBtn').click(); },
     openFood: openFoodMenu, buyFood: buyFood, energy: function () { return energy; },
     setEnergy: function (v) { energy = v; },
-    doStation: doStation, forceStation: function (s) { nearStation = s; }
+    doStation: doStation, forceStation: function (s) { nearStation = s; },
+    step: function (dt, n) { for (var i = 0; i < (n || 1); i++) frame(dt || 1 / 60); },
+    enter: tryEnterExit
   };
   // asl sifatdagi og'ir modellar (DeLorean, AZ-1) — o'yin ochilgandan keyin fonda
   if (G.loadFullCars) G.loadFullCars();

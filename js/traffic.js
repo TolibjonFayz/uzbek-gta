@@ -318,6 +318,41 @@ window.G = window.G || {};
   };
 
   // ---------- MASHINALAR O'ZARO TO'QNASHUVI (aylanalar zanjiri bo'yicha) ----------
+  // massa ~ hajm (len x wid x roofH): Matiz ~6, Damas ~9, Tahoe ~21, Betonovoz ~70
+  function carMass(c) {
+    var s = c.spec;
+    return c._mass || (c._mass = s.len * s.wid * s.roofH * (s.service ? 1.0 : 0.85));
+  }
+  function carVel(c) {
+    var ch = Math.cos(c.heading), sh = Math.sin(c.heading), lat = c.lat || 0;
+    return { x: ch * c.speed - sh * lat + (c.kvx || 0), z: sh * c.speed + ch * lat + (c.kvz || 0) };
+  }
+  // tezlik o'zgarishini mashina o'qlariga bo'lish: oldinga — speed, yonga — lat (o'yinchi) yoki itarilish (kv)
+  function applyImpulse(c, v, dx, dz) {
+    var ch = Math.cos(c.heading), sh = Math.sin(c.heading);
+    var dF = dx * ch + dz * sh, dL = -dx * sh + dz * ch;
+    c.speed += dF;
+    if (c.lat !== undefined && !c.isTraffic) c.lat += dL;
+    else {   // trafik/turgan mashina: yonga itarilish asta so'nadi
+      c.kvx = (c.kvx || 0) - sh * dL;
+      c.kvz = (c.kvz || 0) + ch * dL;
+    }
+  }
+  // itarilishni (kv) qo'llash — har kadr
+  G.stepKnockback = function (dt) {
+    for (var i = 0; i < G.allCars.length; i++) {
+      var c = G.allCars[i];
+      if (!c.kvx && !c.kvz) continue;
+      c.x += c.kvx * dt;
+      c.z += c.kvz * dt;
+      var k = Math.exp(-3.5 * dt);
+      c.kvx *= k; c.kvz *= k;
+      if (Math.abs(c.kvx) + Math.abs(c.kvz) < 0.05) { c.kvx = 0; c.kvz = 0; }
+      if (G.collideCarWorld) G.collideCarWorld(c);
+      G.updateCarMesh(c);
+    }
+  };
+
   G.resolveCarCollisions = function () {
     for (var i = 0; i < G.allCars.length; i++) {
       var a = G.allCars[i];
@@ -344,20 +379,24 @@ window.G = window.G || {};
           }
         }
         if (maxOv > 0) {
-          var aStatic = a.isParked, bStatic = b.isParked;
-          if (aStatic && bStatic) continue;
-          var aShare = aStatic ? 0 : (bStatic ? 1 : 0.5);
-          var bShare = 1 - aShare;
+          // ---- massali to'qnashuv: og'ir mashina kamroq, yengili ko'proq siljiydi ----
+          var ma = carMass(a), mb = carMass(b);
+          if (a.isParked) ma *= 3;   // turgan mashina qo'l tormozida — og'irroq
+          if (b.isParked) mb *= 3;
+          var aShare = mb / (ma + mb), bShare = 1 - aShare;
           a.x -= nX * maxOv * aShare;
           a.z -= nZ * maxOv * aShare;
           b.x += nX * maxOv * bShare;
           b.z += nZ * maxOv * bShare;
-          // urilish kuchi (normal bo'yicha nisbiy tezlik)
-          var vax = Math.cos(a.heading) * a.speed, vaz = Math.sin(a.heading) * a.speed;
-          var vbx = Math.cos(b.heading) * b.speed, vbz = Math.sin(b.heading) * b.speed;
-          var impact = Math.abs((vax - vbx) * nX + (vaz - vbz) * nZ);
-          a.speed *= 0.72;
-          b.speed *= 0.72;
+          // dunyo tezliklari (o'yinchida yon sirpanish ham bor)
+          var va = carVel(a), vb = carVel(b);
+          var vn = (va.x - vb.x) * nX + (va.z - vb.z) * nZ;   // > 0 — yaqinlashmoqda
+          var impact = Math.abs(vn);
+          if (vn > 0) {
+            var J = (1 + 0.25) * vn / (1 / ma + 1 / mb);       // impuls (elastiklik 0.25)
+            applyImpulse(a, va, -J / ma * nX, -J / ma * nZ);
+            applyImpulse(b, vb, J / mb * nX, J / mb * nZ);
+          }
           if (impact > 3.5 && G.onCarCrash) G.onCarCrash(a, b, impact);
           if (impact > 4.5 && G.damageCar) {
             var dmg = Math.min(0.16, impact * 0.007); // ~6 urishda portlaydi

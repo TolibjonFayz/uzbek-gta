@@ -123,7 +123,7 @@ window.G = window.G || {};
     if (!geo) return false;
     var spec = car.spec;
     var braking = fwd < -0.05 && car.speed > 8;                  // tormoz — hammada
-    var drifting = hb && Math.abs(car.speed) > 8;                 // qo'l tormozi — hammada
+    var drifting = (hb && Math.abs(car.speed) > 8) || car.drifting; // qo'l tormozi yoki yonga sirpanish (main.js)
     var burnout = fwd > 0.6 && car.fuel > 0 && isPowerful(spec) &&
                   car.speed >= -0.5 && car.speed < spec.maxSpeed * 0.35;
 
