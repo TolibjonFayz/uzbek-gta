@@ -172,6 +172,27 @@ window.G = window.G || {};
       wheelR: 0.33, type: 'sedan', accel: 16, maxSpeed: 78, ohF: 0.75, ohR: 0.85,
       premium: true, colors: ['#c23b2e', '#0c0e10', '#f4f6f5', '#3d4045']
     },
+    // --- Lamborghini (o'zimiz Blender'da chizgan model: tools/blender/svj.py) ---
+    'Lamborghini SVJ': {
+      len: 4.94, wid: 2.10, roofH: 1.14, cl: 0.13, noseH: 0.42, hoodH: 0.68,
+      wsB: 0.38, roofF: -0.05, roofR: -0.30, rwB: -0.80, tailH: 0.94,
+      wheelR: 0.35, type: 'sedan', accel: 19, maxSpeed: 88, ohF: 1.10, ohR: 1.12,
+      premium: true, model: 'b/svj',
+      colors: ['#7ac943', '#f07a1a', '#ffd23f', '#0c0e10', '#f4f6f5']
+    },
+    // --- Yuklab olingan asl modellar (assets/models/full/*.glb, fonda yuklanadi, trafikda bittadan) ---
+    'DeLorean DMC-12': {
+      len: 4.21, wid: 1.86, roofH: 1.14, cl: 0.16, noseH: 0.62, hoodH: 0.82,
+      wsB: 0.30, roofF: -0.05, roofR: -0.45, rwB: -0.80, tailH: 0.98,
+      wheelR: 0.32, type: 'sedan', accel: 9, maxSpeed: 55, ohF: 0.92, ohR: 0.98,
+      full: 'assets/models/full/delorean.glb?v=3', colors: ['#b9bcbf']
+    },
+    'Mazda AZ-1': {
+      len: 3.55, wid: 1.45, roofH: 1.15, cl: 0.15, noseH: 0.55, hoodH: 0.75,
+      wsB: 0.30, roofF: -0.02, roofR: -0.45, rwB: -0.82, tailH: 0.85,
+      wheelR: 0.31, type: 'hatch', accel: 8.5, maxSpeed: 52, ohF: 0.62, ohR: 0.55,
+      full: 'assets/models/full/az1.glb?v=3', colors: ['#c8102e']
+    },
     // --- Volkswagen ---
     'VW Polo': {
       len: 4.05, wid: 1.75, roofH: 1.46, cl: 0.25, noseH: 0.62, hoodH: 0.90,
@@ -231,6 +252,12 @@ window.G = window.G || {};
   };
   // 3D rejimda Matiz — RG Poly mini mashinasi (rangi modelning o'zida)
   SPECS['Matiz'].model = 'rg/Car_1_B';
+  // o'zimiz Blender'da chizgan modellar (tools/blender/cars.py, art/*.glb)
+  SPECS['Nexia 3'].model = 'b/nexia3';
+  SPECS['Cobalt'].model = 'b/cobalt';
+  SPECS['Malibu 2'].model = 'b/malibu2';
+  SPECS['Spark'].model = 'b/spark';
+  SPECS['Tahoe'].model = 'b/tahoe';
 
   // brend va tur (ma'lumot paneli uchun)
   var META = {
@@ -247,9 +274,11 @@ window.G = window.G || {};
     'Audi A6': ['Audi', 'premium sedan'], 'Audi A8 L': ['Audi', 'flagman sedan'],
     'Audi Q7': ['Audi', 'SUV'], 'Audi RS7': ['Audi', 'super sedan'],
     'Audi RS Q8': ['Audi', 'sport SUV'], 'Audi R8': ['Audi', 'superkar'],
+    'Lamborghini SVJ': ['Lamborghini', 'giperkar (Aventador SVJ)'],
     'VW Polo': ['Volkswagen', 'xetchbek'], 'VW Jetta': ['Volkswagen', 'sedan'],
     'VW Passat': ['Volkswagen', 'sedan'], 'VW Arteon': ['Volkswagen', 'fastbek'],
     'VW Tiguan': ['Volkswagen', 'krossover'], 'VW Touareg': ['Volkswagen', 'SUV'],
+    'DeLorean DMC-12': ['DeLorean', 'sport kupe (1985)'], 'Mazda AZ-1': ['Mazda', 'kei sport kupe'],
     'Tez yordam': ['Shahar xizmati —', 'tez yordam'], 'Betonovoz': ['Qurilish —', 'betonovoz'],
     'Fura': ['Yuk tashish —', 'shatakchi']
   };
@@ -497,7 +526,8 @@ window.G = window.G || {};
 
   G.CAR_SPECS = SPECS;
   // trafik faqat oddiy mashinalardan; premium — faqat avtosalonda
-  G.CAR_NAMES = Object.keys(SPECS).filter(function (n) { return !SPECS[n].premium && !SPECS[n].service; });
+  G.CAR_NAMES = Object.keys(SPECS).filter(function (n) { return !SPECS[n].premium && !SPECS[n].service && !SPECS[n].full; });
+  G.FULL_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].full; });
   G.SERVICE_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].service; });
   G.PREMIUM_NAMES = Object.keys(SPECS).filter(function (n) { return SPECS[n].premium; });
 

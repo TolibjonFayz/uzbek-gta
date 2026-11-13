@@ -83,8 +83,19 @@ window.G = window.G || {};
     Object.keys(header.models).forEach(function (name) {
       RAW[name] = header.models[name].map(function (p) {
         var geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, binBase + p.pos, p.n * 3), 3));
-        geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(buf, binBase + p.nrm, p.n * 3), 3));
+        if (p.qs) {
+          // blender.pack: siqilgan (pozitsiya Int16 * qs metr, normal Int8)
+          var qp = new Int16Array(buf, binBase + p.pos, p.n * 3), qn = new Int8Array(buf, binBase + p.nrm, p.n * 3);
+          var fp = new Float32Array(p.n * 3), fn = new Float32Array(p.n * 3), k = p.qs / 32767;
+          for (var qi = 0; qi < fp.length; qi++) { fp[qi] = qp[qi] * k; fn[qi] = qn[qi] / 127; }
+          geo.setAttribute('position', new THREE.BufferAttribute(fp, 3));
+          geo.setAttribute('normal', new THREE.BufferAttribute(fn, 3));
+        } else {
+          geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, binBase + p.pos, p.n * 3), 3));
+          geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(buf, binBase + p.nrm, p.n * 3), 3));
+        }
+        // 'vc' guruhi: oddiy ranglar uchlarda (bitta chizish chaqiruvi)
+        if (p.col !== undefined) geo.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(buf, binBase + p.col, p.n * 3), 3, true));
         if (p.uv !== undefined) geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(buf, binBase + p.uv, p.n * 2), 2));
         geo.setIndex(new THREE.BufferAttribute(new Uint16Array(buf, binBase + p.idx, p.ic), 1));
         // material guruhlari (cars.pack): har guruhga kalit — 'paint', 'glass', 'c:#hex', 'tex:atlas'...
@@ -156,11 +167,20 @@ window.G = window.G || {};
       console.warn('[models] odamlar yuklanmadi:', e && e.message);
       return null;
     });
-    Promise.all([getPack('assets/models/kenney.pack.gz?v=2'), getPack('assets/models/cars.pack.gz?v=1'), loadImages(), people])
+    // o'zimiz Blender'da yasagan modellar (tools/pack-blender.js) — ixtiyoriy
+    var own = getPack('assets/models/blender.pack.gz?v=5').catch(function (e) {
+      console.warn('[models] blender.pack yuklanmadi:', e && e.message);
+      return null;
+    });
+    // hamma mashinalar endi o'zimizniki (blender.pack, tools/blender/cars.py) — eski Quaternius/RG paketi
+    // (cars.pack, ~620 KB) faqat blender.pack yo'q bo'lsa kerak edi; telefon uchun yuklamaymiz
+    var LEGACY_CARS = false;
+    Promise.all([getPack('assets/models/kenney.pack.gz?v=2'), LEGACY_CARS ? getPack('assets/models/cars.pack.gz?v=1') : Promise.resolve(null), loadImages(), people, own])
       .then(function (res) {
         if (ready) return;
         parsePack(res[0]);
-        parsePack(res[1]);
+        if (res[1]) parsePack(res[1]);
+        if (res[4]) parsePack(res[4]);
         if (res[3]) parsePeople(res[3]);
         kitMat('car');
         clearTimeout(timer);
@@ -364,12 +384,15 @@ window.G = window.G || {};
 
   // ---------- MASHINALAR ----------
   // Asosiy: Quaternius "Realistic Car Pack" (q/...), xizmat mashinalari: RG Poly (rg/...),
-  // Damas uchun furgon: Kenney (car/van). spec.model bilan aniq model berish mumkin.
+  // Damas: o'zimizning Blender modeli (b/damas), bo'lmasa Kenney furgoni (car/van). spec.model bilan aniq model berish mumkin.
+  function slug(name) { return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); }
   function carModelFor(name, spec, variant) {
-    if (variant === 'police') return 'q/Cop';
+    if (variant === 'police') return RAW['b/malibu2_police'] ? 'b/malibu2_police' : 'q/Cop';
     if (variant === 'taxi') return 'q/Taxi';
+    if (spec.model && /^b\//.test(spec.model)) return spec.model;
+    if (RAW['b/' + slug(name)]) return 'b/' + slug(name);   // tools/blender/cars.py avtomatik modellari
     if (spec.model) return spec.model;
-    if (spec.type === 'van') return 'car/van';
+    if (spec.type === 'van') return RAW['b/damas'] ? 'b/damas' : 'car/van';
     if (spec.type === 'hatch') return 'q/NormalCar2';
     if (spec.type === 'suv') return 'q/SUV';
     if (spec.premium) return /R8|M8|RS7|Arteon/.test(name) ? 'q/SportsCar' : 'q/SportsCar2';
@@ -383,6 +406,7 @@ window.G = window.G || {};
     if (sharedMats[key]) return sharedMats[key];
     var m;
     if (key === 'glass') m = new THREE.MeshPhongMaterial({ color: 0x18202a, shininess: 120, specular: 0x8899aa });
+    else if (key === 'vc') m = new THREE.MeshLambertMaterial({ vertexColors: true });
     else if (key === 'hl') m = G.headlightMat || (G.headlightMat = new THREE.MeshLambertMaterial({ color: 0xfff8dc, emissive: 0x8a8158 }));
     else if (key === 'tl') m = G.taillightMat || (G.taillightMat = new THREE.MeshLambertMaterial({ color: 0xcc2222, emissive: 0x701414 }));
     else if (key.indexOf('c:') === 0) m = new THREE.MeshLambertMaterial({ color: key.slice(2) });
@@ -477,11 +501,109 @@ window.G = window.G || {};
     return bumperGeo;
   }
 
+  // ---------- ASL SIFATDAGI MODELLAR (yuklab olingan, GLTFLoader + Draco, fonda) ----------
+  // tools/blender/import_full.py: 'body' + 'wheel-front-left' ... tugunlari, metrda, +Z oldinga.
+  // Og'ir (yuz minglab uchburchak) — o'yin ochilishini kutmaydi; tayyor bo'lgach trafikdagi bitta mashina almashtiriladi.
+  var FULL = {}, FULL_LOD = {};
+  var LOD_DIST = 42;   // shu masofadan uzoqda mashinalar yengil nusxada chiziladi
+  G.loadFullCars = function () {
+    if (G.GFX !== 'kenney' || !THREE.GLTFLoader || !G.FULL_NAMES) return;
+    var loader = new THREE.GLTFLoader();
+    if (THREE.DRACOLoader) {
+      var draco = new THREE.DRACOLoader();
+      draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+      loader.setDRACOLoader(draco);
+    }
+    G.FULL_NAMES.forEach(function (name) {
+      var t0 = performance.now();
+      loader.load(G.CAR_SPECS[name].full, function (gltf) {
+        var tris = 0;
+        gltf.scene.traverse(function (o) {
+          if (o.isMesh) {
+            o.castShadow = true;
+            // metall bo'yoq aks ettirishi uchun osmon-yer muhiti (asl ko'rinishga yaqin)
+            var env = fullEnvMap();
+            (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) {
+              if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.envMapIntensity = 1.0; m.needsUpdate = true; }
+            });
+            tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+          }
+        });
+        FULL[name] = gltf.scene;
+        console.log('[models] asl model tayyor:', name, Math.round(tris) + ' uchburchak,', Math.round(performance.now() - t0) + ' ms');
+        // LOD nusxa (teksturasiz fayl) — materiallar asl modeldan nom bo'yicha olinadi
+        var byName = {};
+        gltf.scene.traverse(function (o) {
+          if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) { byName[m.name] = m; });
+        });
+        loader.load(G.CAR_SPECS[name].full.replace('.glb', '_lod.glb'), function (lg) {
+          lg.scene.traverse(function (o) {
+            if (!o.isMesh) return;
+            o.castShadow = true;
+            o.material = Array.isArray(o.material) ? o.material.map(function (m) { return byName[m.name] || m; }) : (byName[o.material.name] || o.material);
+          });
+          FULL_LOD[name] = lg.scene;
+          if (G.swapInFullCar) G.swapInFullCar(name);
+        }, undefined, function () { if (G.swapInFullCar) G.swapInFullCar(name); });
+      }, undefined, function (e) { console.warn('[models] asl model yuklanmadi:', name, e && e.message); });
+    });
+  };
+  G.fullCarReady = function (name) { return !!FULL[name]; };
+  // oddiy osmon/ufq/yer gradientidan PMREM muhit xaritasi (bir marta)
+  var envTex = null;
+  function fullEnvMap() {
+    if (envTex || !G.debug || !G.debug.renderer) return envTex;
+    var es = new THREE.Scene();
+    var g = new THREE.SphereGeometry(50, 32, 16);
+    var cols = [], pos = g.attributes.position, c = new THREE.Color();
+    var sky = new THREE.Color(0x9ccbf0), hor = new THREE.Color(0xf2f4f6), gnd = new THREE.Color(0x6b6f74);
+    for (var i = 0; i < pos.count; i++) {
+      var y = pos.getY(i) / 50;
+      if (y >= 0) c.copy(hor).lerp(sky, Math.pow(y, 0.6)); else c.copy(hor).lerp(gnd, Math.min(1, -y * 3));
+      cols.push(c.r, c.g, c.b);
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    es.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+    var pm = new THREE.PMREMGenerator(G.debug.renderer);
+    envTex = pm.fromScene(es, 0.02).texture;
+    pm.dispose();
+    return envTex;
+  }
+  function fullCarMesh(name, color) {
+    var s = G.CAR_SPECS[name];
+    var root = new THREE.Group();
+    var inner = FULL[name].clone(true);   // geometriya va materiallar umumiy (xotira tejaladi)
+    inner.rotation.y = Math.PI / 2;        // model +Z oldinga, o'yin +X oldinga
+    if (FULL_LOD[name]) {
+      var low = FULL_LOD[name].clone(true);
+      low.rotation.y = Math.PI / 2;
+      var lod = new THREE.LOD();
+      lod.addLevel(inner, 0);
+      lod.addLevel(low, LOD_DIST);
+      root.add(lod);
+    } else {
+      root.add(inner);
+    }
+    var wheelsF = [];
+    inner.traverse(function (o) { if (/^wheel-front/.test(o.name)) wheelsF.push(o); });
+    root.userData.spec = s;
+    root.userData.name = name;
+    root.userData.color = color;
+    root.userData.bodyMat = new THREE.MeshPhongMaterial({ color: color }); // shikast rangi uchun (asl bo'yoq o'zgarmaydi)
+    root.userData.wheelsF = wheelsF;
+    root.userData.kenney = true;
+    root.userData.full = true;
+    root.userData.driverEye = new THREE.Vector3(s.wsB * s.len / 2 - 0.55, s.hoodH + 0.38, -s.wid * 0.20);
+    return root;
+  }
+
   // 3D model mashinasi — vehicles.js dagi createCarMesh bilan bir xil interfeys
   // (userData: spec, name, color, wheelsF, driverEye, bodyMat, bumpF, bumpR)
   G.kenneyCarMesh = function (name, color, variant, forceModel) {
     var s = G.CAR_SPECS[name];
-    var info = prepCar(forceModel || carModelFor(name, s, variant));
+    if (s.full) return FULL[name] ? fullCarMesh(name, color) : null;
+    var modelKey = forceModel || carModelFor(name, s, variant);
+    var info = prepCar(modelKey);
     if (!info) return null;
     var paint = new THREE.MeshPhongMaterial({ color: color, shininess: 90, specular: 0x666666 });
 
@@ -491,7 +613,9 @@ window.G = window.G || {};
     inner.rotation.y = Math.PI / 2;
     root.add(inner);
 
-    var sx = s.wid / info.kW, sy = s.roofH / info.kH, sz = s.len / info.kL;
+    // o'zimizning Blender modellari (b/...) haqiqiy metrda — cho'zmaymiz (ko'zgu/qanot o'lchamni buzmasin)
+    var trueSize = /^b\//.test(modelKey);
+    var sx = trueSize ? 1 : s.wid / info.kW, sy = trueSize ? 1 : s.roofH / info.kH, sz = trueSize ? 1 : s.len / info.kL;
     var body = new THREE.Mesh(info.body, matsFor(info.keys, paint));
     body.scale.set(sx, sy, sz);
     body.position.z = -info.zMid * sz; // uzunlik bo'yicha markazlash
@@ -516,6 +640,23 @@ window.G = window.G || {};
       inner.add(pivot);
       if (w.front) wheelsF.push(pivot);
     });
+
+    // LOD: uzoqda yengil nusxa (g'ildiraklar kuzovga qo'shilgan, ~1,4k uchburchak) — telefon uchun asosiy tejash
+    var lodRaw = trueSize && RAW[modelKey + '_lod'];
+    if (lodRaw && lodRaw[0]) {
+      var lp = lodRaw[0];
+      var low = new THREE.Group();
+      low.rotation.y = Math.PI / 2;
+      var lm = new THREE.Mesh(lp.geo, lp.keys ? matsFor(lp.keys, paint) : paint);
+      lm.position.z = body.position.z;
+      lm.castShadow = true;
+      low.add(lm);
+      root.remove(inner);
+      var lod = new THREE.LOD();
+      lod.addLevel(inner, 0);
+      lod.addLevel(low, LOD_DIST);
+      root.add(lod);
+    }
 
     // tushadigan bamperlar (ko'rinmas — kuzovda bamper bor; urilganda nusxasi uchib ketadi)
     var bg = getBumperGeo();
@@ -558,7 +699,7 @@ window.G = window.G || {};
     return root;
   };
   // tekshiruv/ko'rgazma uchun: mavjud mashina modellari
-  G.carModelKeys = function () { return Object.keys(RAW).filter(function (k) { return /^(q|rg)\//.test(k) || k === 'car/van'; }); };
+  G.carModelKeys = function () { return Object.keys(RAW).filter(function (k) { return /^(q|rg|b)\//.test(k) || k === 'car/van'; }); };
 
   if (G.GFX === 'kenney') {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);

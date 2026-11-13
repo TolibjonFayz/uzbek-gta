@@ -156,6 +156,32 @@ window.G = window.G || {};
     return car;
   }
 
+  // asl sifatdagi model yuklangach: o'yinchidan uzoqdagi bitta trafik mashinasini shu modelga almashtirish
+  // (og'ir modellar — har biridan faqat bittasi yuradi)
+  G.swapInFullCar = function (name) {
+    if (!trafficCars.length || !G.debug || !G.debug.scene) return;
+    if (trafficCars.some(function (c) { return c.name === name; })) return;
+    var p = G.debug.player || { x: 0, z: 0 };
+    var px = p.x || 0, pz = p.z || 0, best = null, bd = -1;
+    trafficCars.forEach(function (c) {
+      if (c.spec.full || c.spec.service) return;
+      var d = (c.x - px) * (c.x - px) + (c.z - pz) * (c.z - pz);
+      if (d > bd) { bd = d; best = c; }
+    });
+    if (!best) return;
+    var mesh = G.createCarMesh(name);
+    if (!mesh || !mesh.userData.full) return;
+    G.debug.scene.remove(best.mesh);
+    best.mesh = mesh;
+    best.name = name;
+    best.spec = G.CAR_SPECS[name];
+    best.radius = best.spec.len * 0.5 + 0.2;
+    best.bumpFOff = best.bumpROff = true;
+    G.debug.scene.add(mesh);
+    G.updateCarMesh(best);
+    G.fullTraffic = (G.fullTraffic || []).concat([best]);
+  };
+
   G.initTraffic = function (scene) {
     var count = G.IS_TOUCH ? 44 : 84; // katta xarita — ko'proq mashina
     var roads = G.TRAFFIC_ROADS;

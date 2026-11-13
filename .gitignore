@@ -10,3 +10,11 @@ build/
 *~
 .vscode/settings.json
 .idea/
+
+# Blender ish fayllari (qayta yasaladi: tools/blender/*.py)
+art/*.glb
+art/export/
+art/renders/
+art/*.zip
+art/build_list.txt
+tools/blender/__pycache__/

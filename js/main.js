@@ -1004,6 +1004,8 @@ G.whenModelsReady(function () {
     setEnergy: function (v) { energy = v; },
     doStation: doStation, forceStation: function (s) { nearStation = s; }
   };
+  // asl sifatdagi og'ir modellar (DeLorean, AZ-1) — o'yin ochilgandan keyin fonda
+  if (G.loadFullCars) G.loadFullCars();
 
   window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;

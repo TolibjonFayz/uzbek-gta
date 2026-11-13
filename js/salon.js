@@ -13,6 +13,7 @@ window.G = window.G || {};
     // Audi Markazi
     'Audi A6': 600000, 'Audi A8 L': 1300000, 'Audi Q7': 1500000,
     'Audi RS7': 2000000, 'Audi RS Q8': 2400000, 'Audi R8': 3500000,
+    'Lamborghini SVJ': 8000000,
     // VW Salon
     'VW Polo': 350000, 'VW Jetta': 500000, 'VW Passat': 700000,
     'VW Arteon': 1200000, 'VW Tiguan': 900000, 'VW Touareg': 1600000
@@ -22,9 +23,9 @@ window.G = window.G || {};
     { cx: 1650, cz: 870, title: 'LUX MOTORS', sub: 'MERCEDES-BENZ · BMW', showcase: 'Mercedes G63',
       lm: 'Avtosalon Lux', icon: '🏎️',
       cars: ['Mercedes E200', 'Mercedes S500', 'Mercedes Maybach', 'Mercedes G63', 'BMW M5', 'BMW M8', 'BMW X7'] }, // Yangi Shaharda
-    { cx: 320, cz: -672, title: 'AUDI MARKAZI', sub: 'RS · QUATTRO · PREMIUM', showcase: 'Audi R8',
+    { cx: 320, cz: -672, title: 'AUDI MARKAZI', sub: 'RS · QUATTRO · LAMBORGHINI', showcase: 'Lamborghini SVJ',
       lm: 'Avtosalon Audi', icon: '🏎️',
-      cars: ['Audi A6', 'Audi A8 L', 'Audi Q7', 'Audi RS7', 'Audi RS Q8', 'Audi R8'] },
+      cars: ['Audi A6', 'Audi A8 L', 'Audi Q7', 'Audi RS7', 'Audi RS Q8', 'Audi R8', 'Lamborghini SVJ'] },
     { cx: -320, cz: 672, title: 'VW SALON', sub: 'VOLKSWAGEN', showcase: 'VW Touareg',
       lm: 'Avtosalon VW', icon: '🚙',
       cars: ['VW Polo', 'VW Jetta', 'VW Passat', 'VW Arteon', 'VW Tiguan', 'VW Touareg'] }
